@@ -1,174 +1,158 @@
 # CheckoutGuard
 
-**A little clarity before checkout.** A Chrome side panel that helps shoppers investigate an unfamiliar store using public buyer experiences and a deliberately limited AI-text signal.
+**A little clarity before checkout.**
 
-Built for HackPSU's **FNB: Trust, Decisions & Financial Confidence** and **Nittany AI** challenges. CheckoutGuard turns scattered information into a readable purchase decision: what the evidence says, what remains unknown, and what to do next. It does not claim fraud-detection accuracy or guarantee any store is safe.
+CheckoutGuard is a Chrome side panel for the moment right before you buy from a store you've never heard of. Click **Check this store** and it pulls together what real buyers have said about the merchant on Reddit and Instagram, runs the store's own reviews through an AI-text check, and gives you a plain-language read on the evidence: what it says, what's missing, and what to do next.
 
-## Start here
+It won't tell you a store is "safe." It tells you what the public evidence looks like and how much of it there is.
 
-Requirements: Node 22+, Python 3.11+, [uv](https://docs.astral.sh/uv/), and Chrome with side-panel support. Dependency installation needs internet access.
+Built at HackPSU Fall '26 for the **FNB: Trust, Decisions & Financial Confidence** and **Nittany AI** challenges ([how it fits](docs/TRACKS.md)).
 
-```sh
-# Terminal 1, from the repository root
-cd backend
-uv sync
-cp -n .env.example .env
-uv run uvicorn app.main:app --host 127.0.0.1 --port 8000 --no-access-log
-```
+## Quick start
+
+You need Node 22+, Python 3.11+, [uv](https://docs.astral.sh/uv/), and Chrome.
 
 ```sh
-# Terminal 2, from the repository root
-cd extension
-npm install
-npm run build
+make install     # uv sync, creates backend/.env, npm install
+make backend     # API on http://127.0.0.1:8000  (leave running)
+make extension   # builds extension/.output/chrome-mv3
 ```
 
-Open `chrome://extensions`, enable **Developer mode**, choose **Load unpacked**, and select `extension/.output/chrome-mv3`. Pin CheckoutGuard. Open a public product page and click its toolbar icon to grant temporary access to that tab. Then click **Check this store**. If you change to a different tab, click the toolbar icon again before scanning it.
+Load it in Chrome:
 
-For a key-free demo, choose **Try a fictional demo** in the panel. The backend is still required. Missing credentials in live mode produce unavailable sources; they never activate demo mode.
+1. Go to `chrome://extensions` and turn on **Developer mode**.
+2. Click **Load unpacked** and pick `extension/.output/chrome-mv3`.
+3. Pin CheckoutGuard, open a product page, click the toolbar icon, then **Check this store**.
 
-### Browser preview
+Clicking the icon gives the extension temporary access to that one tab. Switch tabs and you'll need to click it again.
+
+**No API keys?** Pick **Try a fictional demo** in the panel. The demo uses invented merchants and is labeled fictional everywhere. The backend still has to be running.
+
+### Browser preview (no extension)
 
 ```sh
-cd extension
-npm run preview:dev
-# Open http://localhost:5173/preview.html
+make preview     # open http://localhost:5173/preview.html
 ```
 
-This uses the same React UI and `/analyze` endpoint, starts in explicitly labeled demo mode, and cannot read browser tabs. `npm run preview:build` produces `.output/preview` for a static preview server. This is distinct from the Chrome extension build.
+Same React UI, same `/analyze` endpoint, but it can't read tabs, so it opens in demo mode. Use `localhost`, not `127.0.0.1`, or CORS will block the API calls.
 
-## Current validation status
+## API keys
 
-The implementation includes the extension entrypoints, UI, API, provider adapters, fixtures, and tests. In the restricted build environment:
+Put these in `backend/.env` and restart the backend. Every key is optional. A missing key makes that source show as unavailable; it never switches on demo mode.
 
-- **49 backend tests passed**, including API, scoring, cache isolation, citation security, and provider failure handling. See [validation notes](docs/VALIDATION.md).
-- **17 frontend tests passed:** four DOM adapters, payload/wording constraints, delayed widgets, all four result scenarios, backend downtime, malformed data, and stale-result suppression.
-- UI TypeScript checks, ESLint, Prettier, Ruff checks/formatting, and the **Vite production preview build** were exercised.
-- **Full WXT typecheck/build and installed-extension smoke testing remain unverified.** Registry DNS access was blocked and WXT was not cached. Local server binding and Chromium process launch were also blocked. There is no claim that browser visual QA or live provider calls passed.
-- Git initialization was denied by workspace permissions, so no commits could be created. No author/co-author attribution was added.
+| Variable | What it powers | Where to get it |
+| --- | --- | --- |
+| `BACKBOARD_API_KEY` | Reddit research (50% of the score) | [backboard.io](https://backboard.io) |
+| `APIFY_TOKEN` | Instagram comment scan (40%). Actor runs are billed. | [Apify console](https://console.apify.com/settings/integrations) |
+| `GPTZERO_API_KEY` | AI-text check on store reviews (10%) | [GPTZero API docs](https://docs.gptzero.me/api-reference/) |
 
-Local cached dependencies were used for these checks; their versions are recorded in `docs/VALIDATION.md`. Normal `npm install` / `uv sync` and a lockfile-based CI run are still needed in an unrestricted environment. No fabricated lockfiles are included.
+Other settings:
 
-## Configuration
+| Variable | Default | Notes |
+| --- | --- | --- |
+| `CORS_ORIGINS` | `http://localhost:3000,http://localhost:5173` | Exact origins, comma separated |
+| `EXTENSION_ID` | empty | The 32-char ID from `chrome://extensions`, for exact-origin CORS |
+| `PROVIDER_TIMEOUT` | `45` | Seconds per source (1–50) |
+| `CACHE_TTL` | `900` | Seconds (1–3600) |
 
-Backend variables live in `backend/.env`; all default to safe key-free operation.
+The extension reads `WXT_API_URL` from `extension/.env` at build time (default `http://localhost:8000`). Rebuild after changing it. Keys never go in the extension.
 
-| Variable | Purpose |
-| --- | --- |
-| `BACKBOARD_API_KEY` | Backboard web search for Reddit discussions |
-| `APIFY_TOKEN` | Apify Instagram Scraper; actor runs may incur charges |
-| `GPTZERO_API_KEY` | Original review-text analysis |
-| `CORS_ORIGINS` | Comma-separated exact preview/web origins; defaults to localhost ports 3000 and 5173 |
-| `EXTENSION_ID` | Optional 32-character unpacked/production Chrome extension ID for exact-origin CORS |
-| `PROVIDER_TIMEOUT` | Per-source budget including concurrency wait; default 45 seconds, bounded to 1–50 |
-| `CACHE_TTL` | In-memory source-cache TTL; default 900 seconds, bounded to 1–3600 |
+## How it works
 
-`extension/.env` may set `WXT_API_URL` before building (default `http://localhost:8000`). Rebuild after changing it: both the fetch target and manifest host permission use this setting. Credentials never belong in the extension. The preview also honors `WXT_API_URL`.
+```text
+product page ──click──▶ extractor (content script)
+                          │  title, review text, linked Instagram profile
+                          ▼
+                     side panel ──POST /analyze──▶ FastAPI backend
+                                                     ├─ Backboard → Reddit threads → excerpt verified against the live page
+                                                     ├─ Apify     → recent Instagram comments on the linked profile
+                                                     └─ GPTZero   → AI-text signal on the store's own reviews
+                                                     ▼
+                                              deterministic scoring → risk index, coverage, next steps
+```
 
-For production use HTTPS, exact CORS origins, an authenticated/rate-limited gateway, request-body/time limits, and controlled egress. CORS is not authentication. The supplied server is intended to run locally on loopback; do not expose this unauthenticated provider-spending endpoint publicly. Avoid proxy access logs containing query strings. See [security and architecture](docs/ARCHITECTURE.md).
+- **Extraction** runs only when you click. It has adapters for Judge.me, Loox, Yotpo, and structured generic reviews; it waits up to 1.8 s for widgets that load late, then dedupes and trims. Review text goes to GPTZero exactly as written. Checkout and account pages are refused, and query strings are stripped from URLs.
+- **Providers** run concurrently, each with its own deadline. One failing source doesn't take down the others, and results are cached in memory for 15 minutes. **Force refresh** skips the cache.
+- **Scoring** is plain code in `backend/app/scoring.py`. No model decides the number.
 
-## What is implemented
+## Reading the score
 
-- WXT + React + TypeScript + Tailwind, Chrome MV3 background and side-panel entrypoints.
-- Explicit-click extraction; temporary `activeTab` access, no history or cookie permissions. URL query/fragment removal. Checkout/account routes are rejected.
-- Separate Judge.me, Loox, Yotpo, and structured generic adapters, each tested against representative synthetic DOM fixtures. These support **accessible rendered DOM variants**, not every version or installation of those platforms. Cross-origin Loox frames and other inaccessible widgets are not readable.
-- A 1.8-second MutationObserver wait, exact review deduplication, trimming only, whole-review omission at size limits. No review paraphrasing or LLM rewrite before GPTZero.
-- Async concurrent checks, individual deadlines, six in-flight provider slots, partial success, safe error messages, missing-key support, bounded in-memory TTL cache, and per-source timestamps/cache badges.
-- Deterministic risk/coverage calculation, plain-language explanation, expandable linked evidence, explicit allegation/pattern/fact categories, and practical next steps.
-- Separate merchant-research and product/review-content cache keys. Force-refresh button bypasses cache; ordinary rescans can reuse research.
-- Explicit fictional warning, positive, limited-evidence, and partial-outage scenarios. Fixtures never enter live caches.
-- Cancellation/response-generation guards when tabs, scan mode, or scenarios change; retry and backend-down states.
+The **risk index (0–100)** is a heuristic, not a probability that the store is a scam. Nobody has validated it against real outcomes yet.
 
-## Evidence and scoring
+- Weights: Reddit 50%, Instagram 40%, review text 10%. The weights of the sources that respond get rescaled to add up to 100%.
+- **Coverage** is the share of the total weight that actually returned usable data. Under 60% shows a **Limited evidence** banner, even if the score is low. With no sources at all, the score is `—` and coverage is 0%.
+- Each distinct verified complaint adds 25 points, up to 85. Repetitive Instagram comments can add 5.
+- GPTZero can contribute at most 20 points, so it can never produce a high-risk result alone. AI-written reviews aren't proof of fraud.
+- A Reddit source counts only if two separate threads have supporting text that was found on the page. Instagram needs at least five readable comments and two real experiences. Citations that weren't verified are still shown, but they don't count toward the score.
 
-The number is a **heuristic risk index (0–100)**, never the probability that a store is a scam. It is unvalidated and explainable, with provisional Reddit **50%**, Instagram **40%**, and review-text **10%** weights. Weights live in `backend/app/scoring.py`; `score()` accepts an alternative positive weight map.
+"Source text checked" means the quoted wording exists at that URL. It doesn't mean the claim is true.
 
-Available sources are renormalized for risk. **Coverage uses their original weights** and measures source availability, not statistical confidence. Less than 60% coverage prominently displays **Limited evidence**, even with a low score. With no available sources, risk is `null` and coverage is `0`.
+## Integration notes
 
-For merchant research, each distinct verified complaint excerpt contributes 25 points, capped at 85; Instagram repetition can add 5. Positive experiences are separately shown; an absence of complaints alone never makes a source available. Keyword rules are conservative but imperfect and do not establish truth. Reddit requires two distinct text-verified discussion IDs. Instagram requires at least five accessible comments and two distinct substantive experiences. Different discussion IDs do not guarantee independent authors.
+- **Backboard** runs a web search (`web_search="Auto"`) and must return schema-valid JSON. Only Reddit URLs are kept. Each excerpt is fetched separately and checked for the quoted text and the merchant's domain, with SSRF protection, IP pinning, and no redirects followed. Backboard may keep the research conversation under its own policy.
+- **Apify** runs `apify/instagram-scraper` on the first Instagram profile the store links to: up to five posts from the last three months, reading `latestComments`. It's never retried automatically, so you don't get billed for a duplicate run. Each run has a 35 s deadline.
+- **GPTZero** calls `/v2/predict/text` with at most one retry for transient errors. It needs at least 250 characters of review text (our own threshold).
 
-GPTZero's document AI-text signal is multiplied by 20 and capped at 20 **before renormalization**. Even when this is the only source, it cannot create a high-risk verdict. AI-written text can be legitimate and human-written text can be fraudulent. Our local 250-character minimum is a sampling policy, not a claim about the provider's minimum input length.
-
-“Source text checked” means the supporting wording was found, not that an allegation is true. Unverified Reddit citations are visible but excluded from scored evidence. Demo evidence is marked **fictional** throughout and uses reserved `.example` source URLs, which deliberately do not resolve to real accusations.
-
-## Integrations and their limits
-
-**Backboard:** uses `BackboardClient.send_message(..., web_search="Auto")`. Structured candidates are schema-validated; only Reddit discussion URLs are considered. A separate fetch checks the supporting excerpt and exact merchant domain nearby, and deterministic code assigns concern types. Blocked, redirected, missing, or unsupported content stays unverified. No inference that an accessible URL alone proves a claim. The response must be valid JSON; malformed output yields a source error. Backboard may retain the domain research conversation under its service policy.
-
-**Apify:** runs the official `apify/instagram-scraper` actor with the first directly linked storefront profile, requests up to five posts from the last three months, and inspects returned `latestComments`. Matching post-owner handles are required. It does not discover unlinked accounts or claim access to all comments. Exact/near-duplicate comment wording (92% similarity, at least 20 characters) is only a weak engagement-pattern signal. The actor POST is not retried automatically to avoid duplicate paid runs; its own run deadline is 35 seconds.
-
-**GPTZero:** submits original extracted wording joined with paragraph separators to `/v2/predict/text`. Handles insufficient samples, unsupported length/language responses, missing keys, rate limits, and malformed results. Up to one short retry is allowed for transient errors. It does not detect generated images or determine whether reviews are genuine.
-
-All three adapters need **credentials and live smoke testing** before claiming production integration success. API documentation consulted is linked in [provider references](docs/PROVIDERS.md).
+API references are in [docs/PROVIDERS.md](docs/PROVIDERS.md); security design is in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ## API
 
 ```sh
 curl http://localhost:8000/health
-curl -X POST http://localhost:8000/analyze \
-  -H 'Content-Type: application/json' \
+curl -X POST http://localhost:8000/analyze -H 'Content-Type: application/json' \
   -d '{"url":"https://lunar-outlet.example/products/travel-pack","demo":"warning"}'
 ```
 
-A live request uses `demo: null` (or omits it):
+Demo scenarios: `warning`, `positive`, `limited`, `partial`. Leave out `demo` for a live scan:
 
 ```json
 {
   "url": "https://merchant.example/products/bag",
   "productTitle": "Everyday travel pack",
   "instagramLinks": ["https://www.instagram.com/merchant/"],
-  "reviews": ["Original rendered review wording goes here."],
+  "reviews": ["Original review wording."],
   "extractionLimitations": [],
   "refresh": false
 }
 ```
 
-The response includes `domain`, `productTitle`, `overallRisk`, `coverage`, `limitedEvidence`, `summary`, `nextSteps`, `scannedAt`, `demo`, and `sources`. Every source contains `status`, `score`, `findings`, `limitations`, `checkedAt`, `cached`, and `expiresAt`. Swagger is available at `/docs`. Request bodies are capped at 100 KB; extracted reviews at 20 items, 2,000 characters per item, and 12,000 total characters. Cache is memory-only, max 256 entries per worker; it resets on restart.
+Limits: 100 KB per request, 20 reviews, 2,000 characters per review, 12,000 characters in total. Swagger is at `/docs`.
 
-## Tests and code standards
+## Development
 
 ```sh
-cd backend
-uv run pytest -q
-uv run ruff check .
-uv run ruff format --check .
-
-cd ../extension
-npm run test
-npm run typecheck
-npm run lint
-npm run format:check
-npm run build
+make test      # pytest + ruff, then vitest, tsc, eslint, prettier, WXT build
+make format
 ```
 
-`npm run typecheck:ui` validates the shared UI independently of WXT. Use `uv run ruff format .` and `npm run format` to format changes. Python uses Pydantic boundary models and a provider protocol; frontend validates backend responses with Zod. Keep deterministic scoring outside provider orchestration.
-
-## Two-minute walkthrough
-
-1. **0:00–0:20 — The moment that matters.** Open the side panel beside a product page. “An unfamiliar store can look polished. CheckoutGuard helps you pause before sharing money.” Show the domain, explicit scan button, and narrow data disclosure.
-2. **0:20–0:55 — Evidence, not an accusation.** Select **Try a fictional demo → Warning signals**, then scan. Say explicitly that the merchant and evidence are fictional. Show the 74 risk index and separate 100% coverage. Expand Reddit evidence, explain allegations versus verified wording, and point to the recommended next steps.
-3. **0:55–1:15 — Fair treatment.** Choose **Positive experiences** and scan. Show substantive delivery/return experiences and the lower index. “This is fewer concerning signals, never a safety guarantee.”
-4. **1:15–1:40 — Honest uncertainty.** Choose **Limited evidence**, scan, and show the dash and 0% coverage. Switch to **Partial outage**: a surviving Reddit source still gives useful evidence while coverage remains limited.
-5. **1:40–2:00 — Responsible AI.** Explain that AI assists research and text analysis; deterministic code owns scoring, weak AI signals cannot create a high-risk verdict, and the shopper owns the decision. This connects financial confidence to a practical everyday AI use case.
-
-## Project layout
+Status as of 2026-10-24: 49 backend tests and 17 frontend tests pass, and typecheck, lint, format, and the WXT build are clean. Details are in [docs/VALIDATION.md](docs/VALIDATION.md).
 
 ```text
 backend/app/
-  main.py, settings.py    HTTP boundary and environment
-  models.py              Pydantic contracts and URL validation
-  service.py, cache.py    Async orchestration and isolated TTL caching
-  scoring.py, demo.py     Pure scoring and explicitly fictional fixtures
-  providers/             Backboard, Apify, GPTZero, citation security
-backend/tests/           API, scoring, cache, provider and SSRF tests
-extension/entrypoints/   WXT background, injected extractor, React side panel
-extension/lib/           DOM adapters, Chrome boundary, Zod contracts
-extension/tests/         DOM fixtures and panel behavior tests
-docs/                    Architecture, provider references, validation
+  main.py, settings.py      HTTP boundary, env config
+  models.py                 Pydantic contracts, URL validation
+  service.py, cache.py      async orchestration, TTL cache
+  scoring.py, demo.py       pure scoring, fictional fixtures
+  providers/                Backboard/Reddit, Apify/Instagram, GPTZero, citation security
+extension/
+  entrypoints/              background worker, extractor content script, React side panel
+  lib/                      DOM adapters, Chrome boundary, Zod contracts
+  tests/                    DOM fixtures, panel behavior tests
+docs/                       architecture, providers, validation, track fit
 ```
 
-## Incomplete / planned
+## Demo script (2 minutes)
 
-Full WXT installation/build and actual Chrome loading must be completed outside the restricted environment. Live credentials, provider quotas/schema behavior, real storefront adapter compatibility, accessibility/visual browser QA, packaged-extension E2E tests, lockfiles, and deployment authentication/rate limiting remain to be verified or added. No accuracy evaluation or user study has been performed.
+1. **0:00–0:20.** Open the side panel next to a product page. "An unfamiliar store can look polished. CheckoutGuard helps you pause before you pay."
+2. **0:20–0:55.** **Try a fictional demo → Warning signals.** Say out loud that the store is fictional. Show the risk index of 74 and 100% coverage, open the Reddit evidence, and walk through the next steps.
+3. **0:55–1:15.** **Positive experiences.** Real delivery and return stories bring the index down. A lower score means fewer concerns, not a guarantee.
+4. **1:15–1:40.** **Limited evidence** shows a dash and 0% coverage. **Partial outage** shows Reddit still useful while coverage stays limited.
+5. **1:40–2:00.** AI helps with the research, code computes the score, and the shopper makes the call.
 
-Trustpilot, broader review widgets, unlinked Instagram discovery, product-claim verification, and AI-image/post detection are stretch work and have no pretend operational controls in this version.
+## Known gaps
+
+- Live provider calls with real keys haven't been tested yet.
+- The extension hasn't been tested end to end in Chrome, and there's been no visual or accessibility pass.
+- Review adapters are tested on synthetic fixtures, not live stores. Cross-origin widgets like some Loox iframes can't be read.
+- The backend has no auth or rate limiting. Keep it on localhost.
+- Not built yet: Trustpilot, more review widgets, finding Instagram accounts the store doesn't link, and AI-image detection.

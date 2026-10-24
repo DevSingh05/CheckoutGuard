@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.json",
+  "include": [
+    "entrypoints/sidepanel",
+    "lib",
+    "tests",
+    "vite.preview.config.ts",
+    "vitest.config.ts"
+  ]
+}

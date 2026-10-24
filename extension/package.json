@@ -1,0 +1,46 @@
+{
+  "name": "checkoutguard-extension",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "wxt",
+    "build": "wxt build && node scripts/verify-manifest.mjs",
+    "postinstall": "wxt prepare",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "preview:dev": "vite --config vite.preview.config.ts",
+    "preview:build": "vite build --config vite.preview.config.ts",
+    "typecheck:ui": "tsc --project tsconfig.ui.json"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "lucide-react": "^0.468.0",
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "wxt": "^0.20.0",
+    "@wxt-dev/module-react": "^1.1.0",
+    "typescript": "^5.7.0",
+    "@types/react": "^18.3.0",
+    "@types/react-dom": "^18.3.0",
+    "@types/node": "^22.0.0",
+    "tailwindcss": "^3.4.17",
+    "vitest": "^3.0.0",
+    "jsdom": "^26.0.0",
+    "eslint": "^9.0.0",
+    "@eslint/js": "^9.0.0",
+    "typescript-eslint": "^8.0.0",
+    "eslint-plugin-react-hooks": "^5.1.0",
+    "globals": "^16.0.0",
+    "prettier": "^3.5.0",
+    "postcss": "^8.5.0",
+    "autoprefixer": "^10.4.20",
+    "vite": "^6.1.0",
+    "@vitejs/plugin-react": "^4.3.4"
+  }
+}

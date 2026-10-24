@@ -1,0 +1,309 @@
+{
+  "warning": {
+    "domain": "lunar-outlet.example",
+    "productTitle": "Everyday travel pack",
+    "overallRisk": 74,
+    "coverage": 100,
+    "limitedEvidence": false,
+    "summary": "Several concerning signals deserve a closer look before you buy. Customer reports are allegations, even when their source text is verified.",
+    "nextSteps": [
+      "Consider delaying this purchase until the complaints are resolved.",
+      "Check the return policy and a working contact method before paying.",
+      "Use a payment method with purchase protection; keep your order records."
+    ],
+    "sources": [
+      {
+        "source": "reddit",
+        "status": "available",
+        "score": 85.0,
+        "findings": [
+          {
+            "title": "Order never arrived",
+            "excerpt": "I ordered the Lunar Pack six weeks ago. It never arrived, and support stopped replying.",
+            "url": "https://lunar-outlet.example/fictional-evidence/reddit/0",
+            "kind": "customer-allegation",
+            "concern": "non-delivery",
+            "verification": "fictional",
+            "date": "2026-10-20"
+          },
+          {
+            "title": "Refund still unresolved",
+            "excerpt": "My return was accepted, but I am still waiting for my refund after a month.",
+            "url": "https://lunar-outlet.example/fictional-evidence/reddit/1",
+            "kind": "customer-allegation",
+            "concern": "refund",
+            "verification": "fictional",
+            "date": "2026-10-20"
+          }
+        ],
+        "limitations": [
+          "All merchants, quotations, scores and source links in this demo are fictional. Links use reserved .example domains."
+        ],
+        "checkedAt": "2026-10-24T12:00:00Z",
+        "cached": false,
+        "expiresAt": null
+      },
+      {
+        "source": "instagram",
+        "status": "available",
+        "score": 75.0,
+        "findings": [
+          {
+            "title": "Customers report delivery problems",
+            "excerpt": "Still waiting for my order from last month. Please answer my support email.",
+            "url": "https://lunar-outlet.example/fictional-evidence/instagram/0",
+            "kind": "customer-allegation",
+            "concern": "non-delivery",
+            "verification": "fictional",
+            "date": "2026-10-20"
+          },
+          {
+            "title": "Repetitive comment wording",
+            "excerpt": "Several sampled comments repeat the same promotional sentence. This alone is not proof of bots.",
+            "url": "https://lunar-outlet.example/fictional-evidence/instagram/1",
+            "kind": "observed-pattern",
+            "concern": "repetition",
+            "verification": "fictional",
+            "date": "2026-10-20"
+          }
+        ],
+        "limitations": [
+          "All merchants, quotations, scores and source links in this demo are fictional. Links use reserved .example domains."
+        ],
+        "checkedAt": "2026-10-24T12:00:00Z",
+        "cached": false,
+        "expiresAt": null
+      },
+      {
+        "source": "reviews",
+        "status": "available",
+        "score": 18.0,
+        "findings": [
+          {
+            "title": "Uncertain AI-text signal",
+            "excerpt": "Fictional AI-text signal: elevated. This cannot tell us whether a review is truthful.",
+            "url": "https://lunar-outlet.example/fictional-evidence/reviews/0",
+            "kind": "observed-pattern",
+            "concern": "ai-text",
+            "verification": "fictional",
+            "date": "2026-10-20"
+          }
+        ],
+        "limitations": [
+          "All merchants, quotations, scores and source links in this demo are fictional. Links use reserved .example domains."
+        ],
+        "checkedAt": "2026-10-24T12:00:00Z",
+        "cached": false,
+        "expiresAt": null
+      }
+    ],
+    "scannedAt": "2026-10-24T12:00:00Z",
+    "demo": true
+  },
+  "positive": {
+    "domain": "cedar-trail.example",
+    "productTitle": "Everyday travel pack",
+    "overallRisk": 6,
+    "coverage": 100,
+    "limitedEvidence": false,
+    "summary": "The available evidence shows fewer concerning signals. Read the supporting experiences and limitations: this is not a guarantee of safety.",
+    "nextSteps": [
+      "Check the return policy and a working contact method before paying.",
+      "Use a payment method with purchase protection; keep your order records."
+    ],
+    "sources": [
+      {
+        "source": "reddit",
+        "status": "available",
+        "score": 5.0,
+        "findings": [
+          {
+            "title": "Delivery experience",
+            "excerpt": "My Cedar Trail pack order arrived on time. The stitching and size matched the listing.",
+            "url": "https://cedar-trail.example/fictional-evidence/reddit/0",
+            "kind": "positive-experience",
+            "concern": "positive",
+            "verification": "fictional",
+            "date": "2026-10-20"
+          },
+          {
+            "title": "Return experience",
+            "excerpt": "I returned the wrong size; my refund was processed within five days.",
+            "url": "https://cedar-trail.example/fictional-evidence/reddit/1",
+            "kind": "positive-experience",
+            "concern": "positive",
+            "verification": "fictional",
+            "date": "2026-10-20"
+          }
+        ],
+        "limitations": [
+          "All merchants, quotations, scores and source links in this demo are fictional. Links use reserved .example domains."
+        ],
+        "checkedAt": "2026-10-24T12:00:00Z",
+        "cached": false,
+        "expiresAt": null
+      },
+      {
+        "source": "instagram",
+        "status": "available",
+        "score": 8.0,
+        "findings": [
+          {
+            "title": "Substantive purchase experience",
+            "excerpt": "My order arrived and the replacement strap you sent fits perfectly. Thanks for following up.",
+            "url": "https://cedar-trail.example/fictional-evidence/instagram/0",
+            "kind": "positive-experience",
+            "concern": "positive",
+            "verification": "fictional",
+            "date": "2026-10-20"
+          }
+        ],
+        "limitations": [
+          "All merchants, quotations, scores and source links in this demo are fictional. Links use reserved .example domains."
+        ],
+        "checkedAt": "2026-10-24T12:00:00Z",
+        "cached": false,
+        "expiresAt": null
+      },
+      {
+        "source": "reviews",
+        "status": "available",
+        "score": 2.0,
+        "findings": [
+          {
+            "title": "Uncertain AI-text signal",
+            "excerpt": "Fictional AI-text signal: low. Human-written reviews can still be misleading.",
+            "url": "https://cedar-trail.example/fictional-evidence/reviews/0",
+            "kind": "observed-pattern",
+            "concern": "ai-text",
+            "verification": "fictional",
+            "date": "2026-10-20"
+          }
+        ],
+        "limitations": [
+          "All merchants, quotations, scores and source links in this demo are fictional. Links use reserved .example domains."
+        ],
+        "checkedAt": "2026-10-24T12:00:00Z",
+        "cached": false,
+        "expiresAt": null
+      }
+    ],
+    "scannedAt": "2026-10-24T12:00:00Z",
+    "demo": true
+  },
+  "limited": {
+    "domain": "little-orbit.example",
+    "productTitle": "Everyday travel pack",
+    "overallRisk": null,
+    "coverage": 0,
+    "limitedEvidence": true,
+    "summary": "Limited evidence. There is not enough source coverage to draw a strong conclusion. A low index here does not establish that this store is trustworthy.",
+    "nextSteps": [
+      "Pause and look for independent, recent buyer experiences.",
+      "Check the return policy and a working contact method before paying.",
+      "Use a payment method with purchase protection; keep your order records."
+    ],
+    "sources": [
+      {
+        "source": "reddit",
+        "status": "insufficient-data",
+        "score": null,
+        "findings": [],
+        "limitations": ["Fictional merchant: not enough substantive evidence."],
+        "checkedAt": "2026-10-24T12:00:00Z",
+        "cached": false,
+        "expiresAt": null
+      },
+      {
+        "source": "instagram",
+        "status": "insufficient-data",
+        "score": null,
+        "findings": [],
+        "limitations": ["Fictional merchant: not enough substantive evidence."],
+        "checkedAt": "2026-10-24T12:00:00Z",
+        "cached": false,
+        "expiresAt": null
+      },
+      {
+        "source": "reviews",
+        "status": "insufficient-data",
+        "score": null,
+        "findings": [],
+        "limitations": ["Fictional merchant: not enough substantive evidence."],
+        "checkedAt": "2026-10-24T12:00:00Z",
+        "cached": false,
+        "expiresAt": null
+      }
+    ],
+    "scannedAt": "2026-10-24T12:00:00Z",
+    "demo": true
+  },
+  "outage": {
+    "domain": "lunar-outlet.example",
+    "productTitle": "Everyday travel pack",
+    "overallRisk": 85,
+    "coverage": 50,
+    "limitedEvidence": true,
+    "summary": "Limited evidence. There is not enough source coverage to draw a strong conclusion. A low index here does not establish that this store is trustworthy.",
+    "nextSteps": [
+      "Pause and look for independent, recent buyer experiences.",
+      "Check the return policy and a working contact method before paying.",
+      "Use a payment method with purchase protection; keep your order records."
+    ],
+    "sources": [
+      {
+        "source": "reddit",
+        "status": "available",
+        "score": 85.0,
+        "findings": [
+          {
+            "title": "Order never arrived",
+            "excerpt": "I ordered the Lunar Pack six weeks ago. It never arrived, and support stopped replying.",
+            "url": "https://lunar-outlet.example/fictional-evidence/reddit/0",
+            "kind": "customer-allegation",
+            "concern": "non-delivery",
+            "verification": "fictional",
+            "date": "2026-10-20"
+          },
+          {
+            "title": "Refund still unresolved",
+            "excerpt": "My return was accepted, but I am still waiting for my refund after a month.",
+            "url": "https://lunar-outlet.example/fictional-evidence/reddit/1",
+            "kind": "customer-allegation",
+            "concern": "refund",
+            "verification": "fictional",
+            "date": "2026-10-20"
+          }
+        ],
+        "limitations": [
+          "All merchants, quotations, scores and source links in this demo are fictional. Links use reserved .example domains."
+        ],
+        "checkedAt": "2026-10-24T12:00:00Z",
+        "cached": false,
+        "expiresAt": null
+      },
+      {
+        "source": "instagram",
+        "status": "error",
+        "score": null,
+        "findings": [],
+        "limitations": ["Fictional provider outage."],
+        "checkedAt": "2026-10-24T12:00:00Z",
+        "cached": false,
+        "expiresAt": null
+      },
+      {
+        "source": "reviews",
+        "status": "error",
+        "score": null,
+        "findings": [],
+        "limitations": ["Fictional provider outage."],
+        "checkedAt": "2026-10-24T12:00:00Z",
+        "cached": false,
+        "expiresAt": null
+      }
+    ],
+    "scannedAt": "2026-10-24T12:00:00Z",
+    "demo": true
+  }
+}

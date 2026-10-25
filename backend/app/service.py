@@ -6,7 +6,7 @@ from urllib.parse import urlsplit
 
 from .brief import BriefWriter, template
 from .cache import TTLCache
-from .demo import MERCHANTS, demo_sources
+from .demo import MERCHANTS, demo_signals, demo_sources
 from .models import AnalyzeRequest, AnalyzeResponse, Source, SourceResult
 from .payments import amount_at_stake, guidance
 from .providers.common import missing
@@ -76,7 +76,7 @@ class Analyzer:
         for source in sources:
             if source.source == "reviews":
                 source.limitations = (source.limitations + request.extractionLimitations)[:20]
-        signals = None if request.demo else request.pageSignals
+        signals = demo_signals(request.demo) if request.demo else request.pageSignals
         risk, coverage = score(sources)
         payment = guidance(signals.paymentMethods if signals else None)
         summary, steps = narrative(risk, coverage, payment.recommended)

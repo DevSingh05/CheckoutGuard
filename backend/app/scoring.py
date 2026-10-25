@@ -130,7 +130,7 @@ def decide(
     reported = {f.concern for s in available if s.source != "store" for f in s.findings}
     reasons += [text for concern, text in COMPLAINTS.items() if concern in reported]
     if limited:
-        reasons.append(f"Limited evidence: {coverage}% source coverage")
+        reasons.append(f"Limited evidence ({coverage}% source coverage)")
     elif risk is not None:
         reasons.append(f"Risk index {risk}/100 with {coverage}% source coverage")
 

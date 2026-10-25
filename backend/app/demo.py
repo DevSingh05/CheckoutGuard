@@ -1,8 +1,9 @@
 """Invented, deterministic evidence. Never mixed into live scans."""
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
-from .models import Finding, SourceResult
+from .models import Finding, PageSignals, SourceResult
+from .providers.store import assess
 
 FIXTURE_DATE = datetime(2026, 10, 24, 12, tzinfo=UTC)
 MERCHANTS = {
@@ -11,12 +12,68 @@ MERCHANTS = {
     "limited": "little-orbit.example",
     "outage": "lunar-outlet.example",
 }
+FICTIONAL = "All merchants, quotations, scores and source links in this demo are fictional. Links use reserved .example domains."
+REGISTERED = {
+    "warning": FIXTURE_DATE - timedelta(days=23),
+    "positive": datetime(2020, 9, 14, tzinfo=UTC),
+    "outage": FIXTURE_DATE - timedelta(days=744),
+}
+SIGNALS = {
+    "warning": PageSignals(
+        paymentMethods=["credit-card", "zelle", "crypto"],
+        hasReturnPolicy=False,
+        hasContactPage=True,
+        hasEmail=False,
+        hasPhone=False,
+        price=35.99,
+        compareAtPrice=129.0,
+        currency="USD",
+    ),
+    "positive": PageSignals(
+        paymentMethods=["credit-card", "paypal", "shop-pay", "apple-pay"],
+        hasReturnPolicy=True,
+        hasContactPage=True,
+        hasEmail=True,
+        hasPhone=True,
+        price=89.0,
+        currency="USD",
+    ),
+    "outage": PageSignals(
+        paymentMethods=["credit-card", "paypal", "debit-card"],
+        hasReturnPolicy=True,
+        hasContactPage=True,
+        hasEmail=True,
+        price=49.0,
+        currency="USD",
+    ),
+}
+
+
+def demo_signals(scenario: str) -> PageSignals | None:
+    return SIGNALS.get(scenario)
+
+
+def demo_store(scenario: str) -> SourceResult:
+    base = f"https://{MERCHANTS[scenario]}/fictional-evidence/store"
+    return assess(
+        MERCHANTS[scenario],
+        REGISTERED[scenario],
+        SIGNALS[scenario],
+        checked=FIXTURE_DATE,
+        page_url=f"{base}/page",
+        rdap_url=f"{base}/registration",
+        verification="fictional",
+        limitations=[FICTIONAL],
+    )
 
 
 def demo_sources(scenario: str):
     sources = []
-    for source in ("reddit", "instagram", "reviews"):
-        if scenario == "limited" or (scenario == "outage" and source != "reddit"):
+    for source in ("reddit", "instagram", "store", "reviews"):
+        if source == "store" and scenario != "limited":
+            sources.append(demo_store(scenario))
+            continue
+        if scenario == "limited" or (scenario == "outage" and source not in {"reddit", "store"}):
             sources.append(
                 SourceResult(
                     source=source,
@@ -120,9 +177,7 @@ def demo_sources(scenario: str):
                     else {"reddit": 5, "instagram": 8, "reviews": 2}
                 )[source],
                 findings=findings,
-                limitations=[
-                    "All merchants, quotations, scores and source links in this demo are fictional. Links use reserved .example domains."
-                ],
+                limitations=[FICTIONAL],
             )
         )
     return sources

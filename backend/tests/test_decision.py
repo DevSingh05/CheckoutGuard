@@ -56,7 +56,7 @@ def test_protect_for_limited_evidence_or_moderate_risk():
     limited = run(None, 0)
     assert limited.verdict == "protect"
     assert limited.headline == "Pay only with a credit card or PayPal"
-    assert "Limited evidence: 0% source coverage" in limited.reasons
+    assert "Limited evidence (0% source coverage)" in limited.reasons
     assert run(30, 100).verdict == "protect"
 
 

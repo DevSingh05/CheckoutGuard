@@ -114,8 +114,33 @@ def test_demo_without_providers(engine, scenario):
     result = call({"url": "https://ignored.example", "demo": scenario}).json()
     assert result["demo"] and result["domain"].endswith(".example")
     assert all(p.check.await_count == 0 for p in engine.providers.values())
-    if scenario in {"limited", "outage"}:
-        assert result["limitedEvidence"]
+    assert [s["source"] for s in result["sources"]] == ["reddit", "instagram", "store", "reviews"]
+    verdict, limited, store = {
+        "warning": ("pause", False, "available"),
+        "positive": ("proceed", False, "available"),
+        "limited": ("protect", True, "insufficient-data"),
+        "outage": ("protect", False, "available"),  # reddit + store = 60% coverage
+    }[scenario]
+    assert result["decision"]["verdict"] == verdict
+    assert result["limitedEvidence"] is limited
+    assert result["sources"][2]["status"] == store
+    assert result["brief"]["generated"] is False
+    assert result["payment"]["recommended"] == "credit-card"
+    assert 3 <= len(result["payment"]["disputeSteps"]) <= 5
+    findings = [f for s in result["sources"] for f in s["findings"]]
+    assert all(f["verification"] == "fictional" for f in findings)
+    assert all(f["url"].startswith(f"https://{result['domain']}/") for f in findings)
+
+
+def test_warning_demo_store_evidence(engine):
+    result = call({"url": "https://ignored.example", "demo": "warning"}).json()
+    store = result["sources"][2]
+    assert store["score"] == 70 and result["overallRisk"] == 72
+    assert store["findings"][0]["title"] == "Domain registered 23 days ago"
+    assert store["findings"][0]["kind"] == "verified-fact"
+    assert result["amountAtStake"]["discountPercent"] == 72
+    assert [o["method"] for o in result["payment"]["options"]] == ["credit-card", "crypto", "zelle"]
+    assert "Zelle and Cryptocurrency" in result["payment"]["warning"]
 
 
 def test_private_url_rejected(engine):

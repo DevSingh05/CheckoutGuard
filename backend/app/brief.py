@@ -51,8 +51,8 @@ def template(result: AnalyzeResponse) -> Brief:
     decision = result.decision
     parts = [decision.headline.rstrip(".") + "."]
     if decision.reasons:
-        parts.append("Main signals: " + "; ".join(decision.reasons[:3]) + ".")
-    if result.limitedEvidence:
+        parts.append("Key signals: " + "; ".join(decision.reasons[:3]) + ".")
+    if result.limitedEvidence and not any(r.startswith("Limited") for r in decision.reasons[:3]):
         parts.append(
             f"Only {result.coverage}% of source coverage was available, so this is a partial picture."
         )

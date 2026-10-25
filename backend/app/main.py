@@ -8,6 +8,7 @@ from .models import AnalyzeRequest, AnalyzeResponse
 from .providers.instagram import InstagramProvider
 from .providers.reddit import RedditProvider
 from .providers.reviews import ReviewProvider
+from .providers.store import StoreProvider
 from .service import Analyzer
 from .settings import Settings
 
@@ -27,6 +28,7 @@ analyzer = Analyzer(
     {
         "reddit": RedditProvider(settings.backboard_api_key),
         "instagram": InstagramProvider(settings.apify_token),
+        "store": StoreProvider(),
         "reviews": ReviewProvider(settings.gptzero_api_key),
     },
     timeout=settings.provider_timeout,

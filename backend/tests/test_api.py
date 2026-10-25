@@ -22,7 +22,7 @@ def providers():
                 )
             },
         )()
-        for name in ("reddit", "instagram", "reviews")
+        for name in ("reddit", "instagram", "store", "reviews")
     }
 
 
@@ -54,8 +54,8 @@ def test_success(engine):
 def test_malformed_response_partial_success(engine):
     engine.providers["reddit"].check.return_value = {"status": "invented"}
     result = call({"url": "https://shop.example/a"}).json()
-    assert result["coverage"] == 50
-    assert result["limitedEvidence"]
+    assert result["coverage"] == 60
+    assert not result["limitedEvidence"]
     assert result["sources"][0]["status"] == "error"
 
 
@@ -65,7 +65,7 @@ def test_individual_timeout(engine):
 
     engine.providers["instagram"].check.side_effect = slow
     result = call({"url": "https://shop.example/a"}).json()
-    assert result["coverage"] == 60
+    assert result["coverage"] == 70
     assert result["sources"][1]["status"] == "error"
 
 
@@ -85,9 +85,9 @@ def test_product_cache_isolation(engine):
         await engine.analyze(a)
         result = await engine.analyze(b)
         assert result.sources[0].cached
-        assert not result.sources[2].cached
+        assert not result.sources[3].cached
         result = await engine.analyze(b)
-        assert result.sources[2].cached
+        assert result.sources[3].cached
         assert engine.providers["reviews"].check.await_count == 2
         assert engine.providers["reddit"].check.await_count == 1
 
@@ -98,7 +98,7 @@ def test_changed_reviews_same_product_isolate(engine):
     async def run():
         await engine.analyze(AnalyzeRequest(url="https://shop.example/a", reviews=["one"]))
         result = await engine.analyze(AnalyzeRequest(url="https://shop.example/a", reviews=["two"]))
-        assert not result.sources[2].cached
+        assert not result.sources[3].cached
 
     asyncio.run(run())
 
@@ -124,3 +124,15 @@ def test_private_url_rejected(engine):
 
 def test_payload_limit(engine):
     assert call({"url": "https://shop.example", "reviews": ["a" * 100001]}).status_code == 413
+
+
+def test_page_signals_isolate_store_cache(engine):
+    async def run():
+        url = "https://shop.example/a"
+        await engine.analyze(AnalyzeRequest(url=url))
+        signals = {"paymentMethods": ["paypal"]}
+        result = await engine.analyze(AnalyzeRequest(url=url, pageSignals=signals))
+        assert result.sources[0].cached and not result.sources[2].cached
+        assert engine.providers["store"].check.await_count == 2
+
+    asyncio.run(run())

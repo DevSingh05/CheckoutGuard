@@ -1,18 +1,20 @@
 """Unvalidated product heuristics, not a statistical fraud model."""
 
-from .models import Finding, SourceResult
+from .models import Finding, PageSignals, SourceResult
+from .payments import amount_at_stake, unprotected_only
 
-WEIGHTS = {"reddit": 0.5, "instagram": 0.4, "reviews": 0.1}
+WEIGHTS = {"reddit": 0.4, "instagram": 0.3, "store": 0.2, "reviews": 0.1}
 COMPLAINT_POINTS = 25
 COMPLAINT_CAP = 85
 REPETITION_POINTS = 5
 REVIEW_CAP = 20
+STORE_CAP = 85
 
 
 def score(sources: list[SourceResult], weights: dict[str, float] | None = None):
     weights = weights or WEIGHTS
     if set(weights) != set(WEIGHTS) or any(v <= 0 for v in weights.values()):
-        raise ValueError("Three positive source weights required")
+        raise ValueError("Four positive source weights required")
     available = {s.source: s for s in sources if s.status == "available"}
     coverage = sum(weights[k] for k in available) / sum(weights.values())
     if not available:
@@ -59,3 +61,17 @@ def evidence_score(findings: list[Finding]) -> float:
     return min(COMPLAINT_CAP, len(complaints) * COMPLAINT_POINTS) + (
         REPETITION_POINTS if any(f.concern == "repetition" for f in verified) else 0
     )
+
+
+def store_score(age_days: int | None, signals: PageSignals | None) -> float:
+    points = 0
+    if age_days is not None:
+        points += 45 if age_days < 30 else 30 if age_days < 180 else 15 if age_days < 365 else 0
+    if signals:
+        contact = (signals.hasContactPage, signals.hasEmail, signals.hasPhone)
+        amount = amount_at_stake(signals)
+        points += 10 if signals.hasReturnPolicy is False else 0
+        points += 10 if all(v is False for v in contact) else 0
+        points += 15 if amount and (amount.discountPercent or 0) >= 70 else 0
+        points += 30 if unprotected_only(signals.paymentMethods) else 0
+    return min(STORE_CAP, points)

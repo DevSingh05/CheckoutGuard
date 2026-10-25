@@ -28,6 +28,9 @@ class Analyzer:
             identity.append(request.instagramLinks)
         if source == "reviews":
             identity.extend([request.url, request.reviews])
+        if source == "store":
+            signals = request.pageSignals
+            identity.extend([request.url, signals.model_dump(mode="json") if signals else None])
         return hashlib.sha256(json.dumps(identity, ensure_ascii=False).encode()).hexdigest()
 
     async def run_source(self, source, request, domain):

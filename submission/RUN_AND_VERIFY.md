@@ -31,6 +31,7 @@ Common outcomes:
 
 | Diagnostic | Meaning / next action |
 | --- | --- |
+| billing | Backboard cannot fund LLM research with its current balance. Free checks remain available; enabling LLM credit is an account-owner decision. |
 | missing-key | Configure that backend key locally and restart. The source is not evidence about the merchant. |
 | authentication | Provider rejected the key, credits or account access. Review its console. |
 | rate-limit | Wait and inspect provider usage/balance. |
@@ -42,4 +43,4 @@ Common outcomes:
 | short-text | Load more complete rendered reviews; no review wording is fabricated or expanded. |
 | no-linked-account | The page exposed no supported public profile link; no association is guessed. |
 
-This session's real Nike-domain diagnostic failed at the network boundary. It is a recorded failed smoke test, not a successful live merchant analysis. Backboard and Apify keys are present locally; review analysis now defaults to the local, key-free mode. No GPTZero key is required. Verify source behavior after restarting the backend on the host before making a submission claim.
+After host access was enabled, the backend was restarted and all four fictional scenarios passed through the listening HTTP API. A real Nike-domain check retrieved public registration data; Backboard returned a billing refusal for LLM research. The current adapter reports `unavailable / billing` clearly. Local review analysis remains key-free. Successful Reddit research, Instagram actor results and the installed-extension reload still need verification.

@@ -4,7 +4,7 @@
 
 | Check | Result |
 | --- | --- |
-| Backend pytest | **106 passed** |
+| Backend pytest | **107 passed** |
 | Backend Ruff lint and format | Clean |
 | Frontend Vitest | **51 passed**: 22 extraction, 26 panel behavior, 3 recent-check storage |
 | Full extension TypeScript check | Passed |
@@ -34,3 +34,12 @@ New regressions cover plain/fenced Backboard JSON, bounded parallel citation ver
 Follow `submission/RUN_AND_VERIFY.md`: restart backend v0.2.0, reload the unpacked extension and product tab, inspect Service connection & setup, and run a real scan on the actual demo merchant. A genuine sparse-evidence result should remain limited. The revised UI exposes why sources did not contribute instead of treating failure as merchant evidence.
 
 The prior validation record and generated builds/media are preserved under `archive/2026-10-25-before-submission/`; none were deleted.
+
+## Host verification after network/filesystem access was enabled
+
+- Backend restarted on 127.0.0.1:8000; /health reports v0.2.0 and reviewMode=local.
+- All four fictional scenarios passed through the actual listening HTTP API: warning 72/100 coverage 100%; positive 5/100 coverage 100%; limited null/0%; outage 57/100 coverage 60%.
+- A live nike.com request retrieved a public domain-registration result. Backboard returned a provider billing refusal for LLM research. The adapter now reports unavailable/billing rather than a JSON-parsing failure; a regression test covers that response.
+- Successful Backboard research and Instagram actor results remain unverified. No subscription or payment was made.
+- The Git fixes were pushed to main, and remote HEAD was checked.
+- Chrome reload remains unverified because the native computer-control helper fails to start its pipe. Resetting the control session did not restore it.

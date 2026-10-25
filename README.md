@@ -44,7 +44,7 @@ Load it in Chrome:
 2. Click **Load unpacked** and pick `extension/.output/chrome-mv3`.
 3. Pin CheckoutGuard, open a product page, click the toolbar icon, then **Check this store**.
 
-Clicking the icon gives the extension temporary access to that one tab. If you switch tabs, click it again.
+The extension can read any http(s) page you check, but it only reads one when you press **Check this store**. Chrome will mention this access when you load it.
 
 **No API keys?** You still get the keyless checks (domain age and page signals) and full payment guidance. You can also pick **Try a fictional demo** in the panel, which uses invented merchants and is labeled as fictional everywhere. The backend still has to be running.
 

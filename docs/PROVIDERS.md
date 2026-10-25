@@ -5,7 +5,7 @@ Consulted during implementation on 2026-10-24. Live account behavior has not bee
 - [Chrome sidePanel API](https://developer.chrome.com/docs/extensions/reference/api/sidePanel): side-panel permission and action-click behavior.
 - [WXT entrypoints](https://wxt.dev/guide/essentials/entrypoints): sidepanel HTML and background/content entrypoints.
 - [WXT scripting](https://wxt.dev/guide/essentials/scripting): programmatic content-script injection.
-- [WXT runtime content registration](https://wxt.dev/api/reference/wxt/interfaces/basecontentscriptentrypointoptions): runtime matches can become host permissions. The build hook restricts final permissions to the backend origin; scans use activeTab.
+- [WXT runtime content registration](https://wxt.dev/api/reference/wxt/interfaces/basecontentscriptentrypointoptions): runtime matches can become host permissions. The build hook sets final host permissions to http(s) pages plus the backend origin; there are no declared content scripts.
 - [Tailwind 3 / Vite](https://v3.tailwindcss.com/docs/guides/vite): PostCSS configuration and CSS directives.
 - [Backboard web search](https://docs.backboard.io/sdk/web-search): per-message `web_search="Auto"` and `response.content`.
 - [Backboard Python SDK](https://pypi.org/project/backboard-sdk/): `send_message` introduced in 1.5.14 and async client context-manager support. Dependency minimum is 1.5.14.

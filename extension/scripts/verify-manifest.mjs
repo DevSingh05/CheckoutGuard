@@ -15,14 +15,13 @@ assert.deepEqual(
   [],
   'Unexpected extension permission',
 );
-assert.equal(manifest.host_permissions.length, 1);
-assert.ok(!manifest.host_permissions[0].includes('://*'));
-assert.equal(manifest.content_scripts?.length || 0, 0);
 assert.deepEqual(
-  [...(manifest.optional_host_permissions || [])].sort(),
-  ['http://*/*', 'https://*/*'],
-  'Store-page access must stay optional',
+  manifest.host_permissions.filter((h) => !h.includes('://*/')),
+  [manifest.host_permissions.find((h) => !h.includes('://*/'))],
+  'Exactly one backend host',
 );
+assert.equal(manifest.content_scripts?.length || 0, 0);
+
 console.log(
-  'Manifest verified: MV3 side panel, explicit-click extraction, one backend host.',
+  'Manifest verified: MV3 side panel, click-only extraction, store pages + one backend host.',
 );

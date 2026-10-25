@@ -203,7 +203,7 @@ export function App() {
         } catch {
           setNeedsAccess(true);
           throw new Error(
-            'CheckoutGuard needs permission to read this page. Allow it on store pages below, or click the CheckoutGuard toolbar icon on this tab, then retry.',
+            'Chrome blocked reading this page. Reload the tab and retry; if it persists, allow CheckoutGuard on store pages below.',
           );
         }
         page = await browser.tabs.sendMessage(current.id, {
@@ -356,7 +356,7 @@ export function App() {
               {demo
                 ? 'Everyday travel pack · Fictional store'
                 : hidden
-                  ? 'Click Check this store. If access is needed, click the CheckoutGuard toolbar icon on this tab first.'
+                  ? 'Reload this tab, or click Check this store.'
                   : tab.title || 'Open a public product page to begin'}
             </p>
           </div>

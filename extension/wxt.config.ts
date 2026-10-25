@@ -6,12 +6,14 @@ const backend = new URL(
       .WXT_API_URL ||
     'http://localhost:8000',
 );
+// Read access to store pages so a scan never depends on a toolbar click.
+const stores = ['https://*/*', 'http://*/*'];
 export default defineConfig({
   modules: ['@wxt-dev/module-react'],
   hooks: {
     'build:manifestGenerated': (_wxt, manifest) => {
-      // Runtime content-script matches must not grant persistent storefront access.
-      manifest.host_permissions = [`${backend.origin}/*`];
+      // Store pages plus the backend; content scripts are still injected only on click.
+      manifest.host_permissions = [...stores, `${backend.origin}/*`];
     },
   },
   manifest: {
@@ -25,9 +27,7 @@ export default defineConfig({
     description:
       'A little clarity before checkout. Investigate public store evidence on your terms.',
     permissions: ['sidePanel', 'activeTab', 'scripting', 'storage'],
-    host_permissions: [`${backend.origin}/*`],
-    // Asked for only when the user presses "Allow on store pages" in the panel.
-    optional_host_permissions: ['https://*/*', 'http://*/*'],
+    host_permissions: [...stores, `${backend.origin}/*`],
     action: { default_title: 'Open CheckoutGuard' },
   },
 });

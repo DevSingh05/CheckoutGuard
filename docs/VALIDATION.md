@@ -11,7 +11,7 @@ Run on Linux (Node 22.22, Python 3.13 via uv) after `uv sync` and `npm install`.
 | Extension Vitest | **45 passed**: 21 extraction (review adapters, payment/policy/price signals, false-positive guards), 21 panel behavior, 3 recent-checks storage |
 | `tsc --noEmit` (full WXT) | Passed |
 | ESLint / Prettier | Clean |
-| WXT build + manifest check | Passed: MV3 side panel, explicit-click extraction, one backend host, permissions limited to `sidePanel`, `activeTab`, `scripting`, `storage`; store-page access is an optional permission requested from the panel |
+| WXT build + manifest check | Passed: MV3 side panel, click-only extraction, http(s) page access plus one backend host, permissions limited to `sidePanel`, `activeTab`, `scripting`, `storage` |
 | Backend server | Starts on `127.0.0.1:8000`; `/health` OK; all four demo scenarios return a decision, payment guidance and a brief |
 | Browser preview | Rendered in headless Chromium at 400 px for all four scenarios; decision banner, how-to-pay card, evidence and recent checks lay out without overflow |
 

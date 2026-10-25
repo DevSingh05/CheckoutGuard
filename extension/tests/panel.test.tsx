@@ -368,7 +368,7 @@ describe('live tab access', () => {
       scan().click();
     });
     expect(container.querySelector('[role="alert"]')?.textContent).toContain(
-      'toolbar icon',
+      'Chrome blocked reading this page',
     );
   });
 });

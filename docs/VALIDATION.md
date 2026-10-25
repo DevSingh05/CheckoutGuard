@@ -1,30 +1,34 @@
-# Validation record — 2026-10-24
+# Validation record — 2026-10-25
 
-Run on macOS (Node 24.20, Python via uv) with a clean `uv sync` / `npm install`. Lockfiles are committed.
+Run on Linux (Node 22.22, Python 3.13 via uv) after `uv sync` and `npm install`. Lockfiles are committed.
 
 ## Passed
 
 | Check | Result |
 | --- | --- |
-| Backend pytest | **49 passed** |
-| Ruff lint / format | Clean, 18 files |
-| DOM extraction tests | **10 passed**: Judge.me, Loox, Yotpo, generic fixtures, plus boundary cases |
-| Side-panel behavior tests | **7 passed**: four demo scenarios, backend down, stale-response suppression, malformed response |
+| Backend pytest | **91 passed** |
+| Ruff lint / format | Clean |
+| Extension Vitest | **44 passed**: 21 extraction (review adapters, payment/policy/price signals, false-positive guards), 20 panel behavior, 3 recent-checks storage |
 | `tsc --noEmit` (full WXT) | Passed |
 | ESLint / Prettier | Clean |
-| WXT build + manifest check | Passed: MV3 side panel, explicit-click extraction, one backend host (~250 KB total) |
-| Backend server | Starts on `127.0.0.1:8000`; `/health` OK; `/analyze` demo returns risk 74 / coverage 100 |
-| Live mode, no keys | `/analyze` returns cleanly: Reddit `unavailable`, Instagram/reviews `insufficient-data` |
-| Browser preview | Vite serves `preview.html` on `localhost:5173`; CORS preflight from that origin passes |
+| WXT build + manifest check | Passed: MV3 side panel, explicit-click extraction, one backend host, permissions limited to `sidePanel`, `activeTab`, `scripting`, `storage` |
+| Backend server | Starts on `127.0.0.1:8000`; `/health` OK; all four demo scenarios return a decision, payment guidance and a brief |
+| Browser preview | Rendered in headless Chromium at 400 px for all four scenarios; decision banner, how-to-pay card, evidence and recent checks lay out without overflow |
 
-Backend tests use the HTTPX ASGI transport. They cover API success, invalid provider data, per-source timeouts, all-provider failure, demo isolation, private-URL and oversized-request rejection, TTL and capacity, product isolation within one merchant, forced refresh, missing keys, preservation of original text, retries and body limits, excluding unverified Reddit citations, distinct discussion identity, rejecting DNS lookups that resolve to private addresses, TLS hostname/IP pinning, and refusing redirects.
+Backend tests use the HTTPX ASGI transport and fake clients, and never touch the network. Beyond the original coverage (API errors, timeouts, demo isolation, SSRF and redirect refusal, cache identity, citation verification), they now cover:
 
-UI tests run in JSDOM with mocked transport. The mocks return JSON from the real backend demo implementation. They don't test real browser layout, activeTab behavior, or live integrations.
+- the RDAP store provider: new domains, old domains, RDAP failure, and refusing non-HTTPS redirects
+- payment ranking and the irreversible-method warning
+- the verdict rules
+- the brief falling back to the template when there's no key, when the client raises, and on non-`end_turn` stop reasons
+- requests without `pageSignals`, which still work for older clients
+
+Panel tests run in JSDOM against fixture JSON generated from the real backend demo output. They also check that an older backend response, with the new fields missing or `null`, still renders.
 
 ## Not yet verified
 
-1. **Live providers.** Nothing has run with real Backboard, Apify, or GPTZero keys. Quotas, error shapes, and schema drift are still unchecked.
-2. **Installed extension, end to end.** Not yet tested: toolbar → side panel → extraction → `/analyze` in real Chrome, retry, switching tabs mid-scan, unsupported pages, and force refresh.
-3. **Visual and accessibility QA.** Not yet tested: 380 px and 420 px widths, keyboard focus, long titles, contrast, and screen-reader announcements.
-4. **Real storefronts.** The adapters have only been tested on synthetic fixtures.
+1. **Live providers.** Nothing has run with real Backboard, Apify, GPTZero, or Anthropic keys. RDAP has only been tested with mocked responses.
+2. **Installed extension, end to end.** Not yet tested in real Chrome: toolbar → side panel → extraction → `/analyze`, plus tab switching mid-scan.
+3. **Real storefronts.** Review and payment adapters have only been tested on synthetic fixtures.
+4. **Accessibility audit.** Keyboard focus and live-region announcements are covered by tests, but there's been no screen-reader pass.
 5. **Deployment.** There's no auth, rate limiting, or Apify spend cap. Keep the server on localhost.

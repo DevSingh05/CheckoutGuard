@@ -2,11 +2,29 @@
 
 **A little clarity before checkout.**
 
-CheckoutGuard is a Chrome side panel for the moment right before you buy from a store you've never heard of. Click **Check this store** and it pulls together what real buyers have said about the merchant on Reddit and Instagram, runs the store's own reviews through an AI-text check, and gives you a plain-language read on the evidence: what it says, what's missing, and what to do next.
+CheckoutGuard is a Chrome side panel for the moment right before you pay a store you've never heard of. Click **Check this store** and it answers two questions:
 
-It won't tell you a store is "safe." It tells you what the public evidence looks like and how much of it there is.
+1. **What does the public evidence say about this store?** Real buyer reports on Reddit and Instagram, how long the domain has existed, whether the page has a return policy and contact details, how steep the discount is, and whether the store's own reviews read as AI-written.
+2. **If I still want it, how should I pay?** It reads which payment methods the page actually offers and ranks them by how well they protect your money: a credit card's chargeback rights versus a Zelle or crypto payment that can't be reversed. It also tells you what to do if the order never shows up.
 
-Built at HackPSU Fall '26 for the **FNB: Trust, Decisions & Financial Confidence** and **Nittany AI** challenges ([how it fits](docs/TRACKS.md)).
+You get one of three verdicts, **Proceed**, **Protect your payment**, or **Pause before paying**, with the reasons behind it. CheckoutGuard never calls a store "safe". It shows what the evidence says and how much of it there is.
+
+![CheckoutGuard side panel, warning scenario](showcase/video/assets/panel-warning.png)
+
+> 🎬 Demo video: [`showcase/checkoutguard-demo.mp4`](showcase/checkoutguard-demo.mp4). The voice-over script is in [`showcase/VOICEOVER.md`](showcase/VOICEOVER.md).
+
+## What's in the panel
+
+| Section | What it shows |
+| --- | --- |
+| **Decision** | Proceed / Protect your payment / Pause, a one-line headline, and up to five reasons, each taken from a specific finding. |
+| **How to pay** | The payment methods this page offers, ranked strong → moderate → limited → none, with a recommended method and a warning when irreversible methods are listed. |
+| **Amount at stake** | Price, the "was" price, and the discount. Discounts of 70% or more get flagged. |
+| **If something goes wrong** | 3–5 dispute steps that fit the recommended payment method. |
+| **Risk index + coverage** | A 0–100 heuristic computed by plain code, plus how much of the evidence actually came back. |
+| **Evidence** | Reddit, Instagram, store basics (domain age, policy, contact, pricing), and the review-text check. Every quote links to its source. |
+| **Summary** | A 2–3 sentence brief. When `ANTHROPIC_API_KEY` is set, Claude writes it from the evidence alone; otherwise a built-in template does. |
+| **Recent checks** | Your last five checks (domain, verdict, risk, time only), kept on this device. |
 
 ## Quick start
 
@@ -24,9 +42,9 @@ Load it in Chrome:
 2. Click **Load unpacked** and pick `extension/.output/chrome-mv3`.
 3. Pin CheckoutGuard, open a product page, click the toolbar icon, then **Check this store**.
 
-Clicking the icon gives the extension temporary access to that one tab. Switch tabs and you'll need to click it again.
+Clicking the icon gives the extension temporary access to that one tab. If you switch tabs, click it again.
 
-**No API keys?** Pick **Try a fictional demo** in the panel. The demo uses invented merchants and is labeled fictional everywhere. The backend still has to be running.
+**No API keys?** You still get the keyless checks (domain age and page signals) and full payment guidance. You can also pick **Try a fictional demo** in the panel, which uses invented merchants and is labeled as fictional everywhere. The backend still has to be running.
 
 ### Browser preview (no extension)
 
@@ -34,17 +52,20 @@ Clicking the icon gives the extension temporary access to that one tab. Switch t
 make preview     # open http://localhost:5173/preview.html
 ```
 
-Same React UI, same `/analyze` endpoint, but it can't read tabs, so it opens in demo mode. Use `localhost`, not `127.0.0.1`, or CORS will block the API calls.
+This is the same React UI and the same `/analyze` endpoint. The preview can't read tabs, so it opens in demo mode. Use `localhost`, not `127.0.0.1`, or CORS will block the API calls.
 
 ## API keys
 
-Put these in `backend/.env` and restart the backend. Every key is optional. A missing key makes that source show as unavailable; it never switches on demo mode.
+Put these in `backend/.env` and restart the backend. Every key is optional. A missing key marks that source as unavailable; it never switches on demo mode.
 
 | Variable | What it powers | Where to get it |
 | --- | --- | --- |
-| `BACKBOARD_API_KEY` | Reddit research (50% of the score) | [backboard.io](https://backboard.io) |
-| `APIFY_TOKEN` | Instagram comment scan (40%). Actor runs are billed. | [Apify console](https://console.apify.com/settings/integrations) |
+| `BACKBOARD_API_KEY` | Reddit research (40% of the score) | [backboard.io](https://backboard.io) |
+| `APIFY_TOKEN` | Instagram comment scan (30%). Actor runs are billed. | [Apify console](https://console.apify.com/settings/integrations) |
 | `GPTZERO_API_KEY` | AI-text check on store reviews (10%) | [GPTZero API docs](https://docs.gptzero.me/api-reference/) |
+| `ANTHROPIC_API_KEY` | Claude-written summary (never affects the score) | [Claude Console](https://platform.claude.com/) |
+
+The **store** source (20%) needs no key. It uses public RDAP registration records and the signals read from the page.
 
 Other settings:
 
@@ -61,39 +82,56 @@ The extension reads `WXT_API_URL` from `extension/.env` at build time (default `
 
 ```text
 product page ──click──▶ extractor (content script)
-                          │  title, review text, linked Instagram profile
+                          │  title, review text, linked Instagram profile,
+                          │  payment badges, policy/contact links, price + "was" price
                           ▼
                      side panel ──POST /analyze──▶ FastAPI backend
-                                                     ├─ Backboard → Reddit threads → excerpt verified against the live page
-                                                     ├─ Apify     → recent Instagram comments on the linked profile
-                                                     └─ GPTZero   → AI-text signal on the store's own reviews
+                                                     ├─ Store      → RDAP domain age + page signals (keyless)
+                                                     ├─ Backboard  → Reddit threads → each quote verified on the live page
+                                                     ├─ Apify      → recent Instagram comments on the linked profile
+                                                     └─ GPTZero    → AI-text signal on the store's own reviews
                                                      ▼
-                                              deterministic scoring → risk index, coverage, next steps
+                                deterministic scoring → risk index, coverage, verdict
+                                payment table         → ranked methods, dispute steps
+                                Claude (optional)     → plain-language brief from the evidence only
 ```
 
-- **Extraction** runs only when you click. It has adapters for Judge.me, Loox, Yotpo, and structured generic reviews; it waits up to 1.8 s for widgets that load late, then dedupes and trims. Review text goes to GPTZero exactly as written. Checkout and account pages are refused, and query strings are stripped from URLs.
-- **Providers** run concurrently, each with its own deadline. One failing source doesn't take down the others, and results are cached in memory for 15 minutes. **Force refresh** skips the cache.
-- **Scoring** is plain code in `backend/app/scoring.py`. No model decides the number.
+- **Extraction** runs only when you click. Review adapters cover Judge.me, Loox, Yotpo, and structured generic reviews. Payment detection reads badge alt text, labels, and payment-related copy. It skips negations ("we do not accept PayPal") and ambiguous words outside a payment context. Unknown values are sent as `null`, never guessed. Checkout and account pages are refused, and query strings are stripped from URLs.
+- **Providers** run concurrently, each with its own deadline, so one failing source doesn't take down the others. Results are cached in memory for 15 minutes. **Check again** reuses the cache; the refresh button skips it.
+- **Scoring and payment guidance** are plain code (`backend/app/scoring.py`, `backend/app/payments.py`). No model decides the number or the verdict.
+- **The AI layer** helps in two places: Backboard does the open-web Reddit research, and Claude rewrites the finished evidence into plain language. Claude gets only finding summaries, never raw review text, and is told to add no new facts and never to call a store safe. If the call fails, times out, or is declined, the panel shows the template summary instead.
 
-## Reading the score
+## Reading the result
+
+### Verdict
+
+- **Pause** if the risk index is 60 or higher, the domain is under 30 days old, or the store only accepts payment methods with no buyer protection.
+- **Protect your payment** if evidence is limited, the risk index is 30 or higher, or any store-level concern shows up.
+- **Proceed** otherwise. This means fewer concerns, not a guarantee.
+
+### Payment protection tiers
+
+| Tier | Methods | Why |
+| --- | --- | --- |
+| Strong | Credit card; PayPal (goods & services); Apple Pay / Google Pay / Shop Pay / Amazon Pay backed by a credit card | Chargeback rights (Fair Credit Billing Act) or a purchase-protection program |
+| Moderate | Debit card; Klarna, Afterpay, Affirm | You can dispute, but the money is already out of your account, or you keep owing installments during the review |
+| Limited | Bank transfer | Hard to recall once sent |
+| None | Zelle, wire, crypto, gift cards, Cash App, Venmo (friends & family), Western Union | Effectively irreversible. Legitimate stores rarely require these. |
+
+This is general consumer information, not legal or financial advice. Card issuers and payment providers set their own terms.
+
+### Risk index
 
 The **risk index (0–100)** is a heuristic, not a probability that the store is a scam. Nobody has validated it against real outcomes yet.
 
-- Weights: Reddit 50%, Instagram 40%, review text 10%. The weights of the sources that respond get rescaled to add up to 100%.
-- **Coverage** is the share of the total weight that actually returned usable data. Under 60% shows a **Limited evidence** banner, even if the score is low. With no sources at all, the score is `—` and coverage is 0%.
-- Each distinct verified complaint adds 25 points, up to 85. Repetitive Instagram comments can add 5.
-- GPTZero can contribute at most 20 points, so it can never produce a high-risk result alone. AI-written reviews aren't proof of fraud.
-- A Reddit source counts only if two separate threads have supporting text that was found on the page. Instagram needs at least five readable comments and two real experiences. Citations that weren't verified are still shown, but they don't count toward the score.
+- Weights: Reddit 40%, Instagram 30%, store 20%, review text 10%. When some sources don't respond, the weights of those that do are rescaled to add up to 100%.
+- **Coverage** is the share of the total weight that returned usable data. Under 60% shows a **Limited evidence** banner, even when the score is low. With no sources at all, the score is `—` and coverage is 0%.
+- Reddit/Instagram: each distinct verified complaint adds 25 points, up to 85. Repetitive Instagram comments can add 5.
+- Store: domain under 30 days +45, under 180 days +30, under a year +15. No return policy +10. No contact details at all +10. Discount of 70% or more +15. Only unprotected payment methods +30. Capped at 85.
+- GPTZero contributes at most 20 points, so on its own it can never produce a high-risk result. AI-written reviews aren't proof of fraud.
+- A Reddit source counts only when two separate threads have supporting text found on the page. Instagram needs at least five readable comments and two real experiences. Unverified citations are still shown, but they don't count toward the score.
 
-"Source text checked" means the quoted wording exists at that URL. It doesn't mean the claim is true.
-
-## Integration notes
-
-- **Backboard** runs a web search (`web_search="Auto"`) and must return schema-valid JSON. Only Reddit URLs are kept. Each excerpt is fetched separately and checked for the quoted text and the merchant's domain, with SSRF protection, IP pinning, and no redirects followed. Backboard may keep the research conversation under its own policy.
-- **Apify** runs `apify/instagram-scraper` on the first Instagram profile the store links to: up to five posts from the last three months, reading `latestComments`. It's never retried automatically, so you don't get billed for a duplicate run. Each run has a 35 s deadline.
-- **GPTZero** calls `/v2/predict/text` with at most one retry for transient errors. It needs at least 250 characters of review text (our own threshold).
-
-API references are in [docs/PROVIDERS.md](docs/PROVIDERS.md); security design is in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+"Source text checked" means the quoted wording exists at that URL. It doesn't mean the claim is true. Domain age comes from public registration records, and an old domain can still change hands.
 
 ## API
 
@@ -103,7 +141,7 @@ curl -X POST http://localhost:8000/analyze -H 'Content-Type: application/json' \
   -d '{"url":"https://lunar-outlet.example/products/travel-pack","demo":"warning"}'
 ```
 
-Demo scenarios: `warning`, `positive`, `limited`, `partial`. Leave out `demo` for a live scan:
+Demo scenarios: `warning` (Pause), `positive` (Proceed), `limited` (Protect, no evidence), `outage` (Protect, partial evidence). Leave out `demo` for a live scan:
 
 ```json
 {
@@ -111,12 +149,22 @@ Demo scenarios: `warning`, `positive`, `limited`, `partial`. Leave out `demo` fo
   "productTitle": "Everyday travel pack",
   "instagramLinks": ["https://www.instagram.com/merchant/"],
   "reviews": ["Original review wording."],
+  "pageSignals": {
+    "paymentMethods": ["credit-card", "paypal", "zelle"],
+    "hasReturnPolicy": true,
+    "hasContactPage": true,
+    "hasEmail": null,
+    "hasPhone": null,
+    "price": 35.99,
+    "compareAtPrice": 129,
+    "currency": "USD"
+  },
   "extractionLimitations": [],
   "refresh": false
 }
 ```
 
-Limits: 100 KB per request, 20 reviews, 2,000 characters per review, 12,000 characters in total. Swagger is at `/docs`.
+Every field except `url` is optional. The response adds `decision`, `payment`, `amountAtStake`, and `brief` to the per-source evidence. Request limits: 100 KB per request, 20 reviews, 2,000 characters per review, 12,000 characters in total. Swagger is at `/docs`.
 
 ## Development
 
@@ -125,34 +173,32 @@ make test      # pytest + ruff, then vitest, tsc, eslint, prettier, WXT build
 make format
 ```
 
-Status as of 2026-10-24: 49 backend tests and 17 frontend tests pass, and typecheck, lint, format, and the WXT build are clean. Details are in [docs/VALIDATION.md](docs/VALIDATION.md).
+As of 2026-10-25, 91 backend tests and 44 extension tests pass, and typecheck, lint, format, and the WXT build are clean. Details are in [docs/VALIDATION.md](docs/VALIDATION.md).
 
 ```text
 backend/app/
   main.py, settings.py      HTTP boundary, env config
-  models.py                 Pydantic contracts, URL validation
+  models.py                 Pydantic contracts, URL validation, page signals
   service.py, cache.py      async orchestration, TTL cache
-  scoring.py, demo.py       pure scoring, fictional fixtures
-  providers/                Backboard/Reddit, Apify/Instagram, GPTZero, citation security
+  scoring.py                pure scoring, store score, verdict rules
+  payments.py               protection tiers, ranking, dispute steps
+  brief.py                  optional Claude summary with template fallback
+  demo.py                   fictional fixtures
+  providers/                RDAP store check, Backboard/Reddit, Apify/Instagram, GPTZero, citation security
 extension/
   entrypoints/              background worker, extractor content script, React side panel
-  lib/                      DOM adapters, Chrome boundary, Zod contracts
+  entrypoints/sidepanel/components/   decision banner, payment card, brief, recent checks
+  lib/                      DOM adapters + page signals, Chrome boundary, Zod contracts
   tests/                    DOM fixtures, panel behavior tests
-docs/                       architecture, providers, validation, track fit
+showcase/                   launch video, scenes, render script, voice-over
+docs/                       architecture, providers, validation
 ```
-
-## Demo script (2 minutes)
-
-1. **0:00–0:20.** Open the side panel next to a product page. "An unfamiliar store can look polished. CheckoutGuard helps you pause before you pay."
-2. **0:20–0:55.** **Try a fictional demo → Warning signals.** Say out loud that the store is fictional. Show the risk index of 74 and 100% coverage, open the Reddit evidence, and walk through the next steps.
-3. **0:55–1:15.** **Positive experiences.** Real delivery and return stories bring the index down. A lower score means fewer concerns, not a guarantee.
-4. **1:15–1:40.** **Limited evidence** shows a dash and 0% coverage. **Partial outage** shows Reddit still useful while coverage stays limited.
-5. **1:40–2:00.** AI helps with the research, code computes the score, and the shopper makes the call.
 
 ## Known gaps
 
-- Live provider calls with real keys haven't been tested yet.
-- The extension hasn't been tested end to end in Chrome, and there's been no visual or accessibility pass.
-- Review adapters are tested on synthetic fixtures, not live stores. Cross-origin widgets like some Loox iframes can't be read.
+- Live provider calls with real keys haven't been tested yet, and that includes the Claude summary, which so far has only run against a fake client.
+- The extension hasn't been tested end to end in Chrome. The panel has been rendered and checked at 400 px in the browser preview.
+- Review and payment adapters are tested on synthetic fixtures, not live stores. Cross-origin widgets like some Loox iframes can't be read, and payment badges drawn as unlabeled images aren't detected.
+- RDAP coverage varies by top-level domain. Some registries don't publish registration dates.
 - The backend has no auth or rate limiting. Keep it on localhost.
 - Not built yet: Trustpilot, more review widgets, finding Instagram accounts the store doesn't link, and AI-image detection.

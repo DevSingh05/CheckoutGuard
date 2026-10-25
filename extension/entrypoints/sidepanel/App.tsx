@@ -571,7 +571,7 @@ export function App() {
         />
         <footer>
           <ShieldCheck size={12} /> A pause for perspective.
-          <span>Built at HackPSU</span>
+          <span>Evidence, not a verdict</span>
         </footer>
       </main>
     </div>

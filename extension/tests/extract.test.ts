@@ -1,7 +1,13 @@
 // @vitest-environment jsdom
 import { readFileSync } from 'node:fs';
 import { describe, expect, it, afterEach, vi } from 'vitest';
-import { extractReviews, collectPage } from '../lib/extract';
+import {
+  extractReviews,
+  collectPage,
+  extractPageSignals,
+  extractPrice,
+  detectPaymentMethods,
+} from '../lib/extract';
 afterEach(() => {
   document.body.innerHTML = '';
   vi.useRealTimers();
@@ -75,5 +81,115 @@ describe('rendered review adapters', () => {
   it('refuses checkout pages', async () => {
     history.replaceState({}, '', '/checkout');
     await expect(collectPage()).rejects.toThrow('public product page');
+  });
+});
+
+const load = (fixture: string) => {
+  document.body.innerHTML = readFileSync(
+    `tests/fixtures/${fixture}.html`,
+    'utf8',
+  );
+};
+describe('page signals', () => {
+  it('flags irreversible methods, a steep discount and a missing policy', () => {
+    load('store-scam');
+    expect(extractPageSignals(document)).toEqual({
+      paymentMethods: ['credit-card', 'crypto', 'zelle'],
+      hasReturnPolicy: false,
+      hasContactPage: false,
+      hasEmail: false,
+      hasPhone: false,
+      price: 35.99,
+      compareAtPrice: 129,
+      currency: null,
+    });
+  });
+  it('reads badges, policy, contact and structured price on a typical store', () => {
+    load('store-legit');
+    expect(extractPageSignals(document)).toEqual({
+      paymentMethods: [
+        'credit-card',
+        'paypal',
+        'apple-pay',
+        'shop-pay',
+        'klarna',
+      ],
+      hasReturnPolicy: true,
+      hasContactPage: true,
+      hasEmail: true,
+      hasPhone: true,
+      price: 89,
+      compareAtPrice: 110,
+      currency: 'USD',
+    });
+  });
+  it('avoids common-word false positives', () => {
+    document.body.innerHTML = `
+      <p>Discover our new arrivals and affirm your style.</p>
+      <p>We do not accept PayPal or Venmo.</p>
+      <a href="/gift-cards">Gift cards</a>
+      <img alt="Visual merchandising" src="/img/visualize.png" />
+      <div class="display-grid cardigan">Cardigans</div>`;
+    expect(detectPaymentMethods(document)).toEqual([]);
+  });
+  it('counts strict methods only in a payment context', () => {
+    document.body.innerHTML = `
+      <div id="payment-methods"><span>Discover</span><span>Gift card</span></div>
+      <p>Pay with Venmo or Cash App at checkout.</p>`;
+    expect(detectPaymentMethods(document)).toEqual([
+      'credit-card',
+      'gift-card',
+      'cash-app',
+      'venmo',
+    ]);
+  });
+  it('says unknown rather than missing on a barely rendered page', () => {
+    document.body.innerHTML = '<h1>Loading…</h1>';
+    expect(extractPageSignals(document)).toMatchObject({
+      paymentMethods: [],
+      hasReturnPolicy: null,
+      hasContactPage: null,
+      hasEmail: null,
+      hasPhone: null,
+      price: null,
+    });
+  });
+  it.each([
+    [
+      '<meta property="product:price:amount" content="1299.50"><meta property="product:price:currency" content="EUR">',
+      1299.5,
+      null,
+      'EUR',
+    ],
+    [
+      '<div class="price"><span>€1.299,00</span><span class="compare-at-price">€1.499,00</span></div>',
+      1299,
+      1499,
+      'EUR',
+    ],
+    ['<div class="price"><del>£20.00</del> £25.00</div>', 25, null, 'GBP'],
+    ['<div class="price">Sold out</div>', null, null, null],
+    ['<script type="application/ld+json">{not json</script>', null, null, null],
+  ])(
+    'parses price markup conservatively: %s',
+    (html, price, compareAtPrice, currency) => {
+      document.body.innerHTML = html;
+      expect(extractPrice(document)).toEqual({
+        price,
+        compareAtPrice,
+        currency,
+      });
+    },
+  );
+  it('sends signals with the collected page', async () => {
+    history.replaceState({}, '', '/products/bag');
+    document.body.innerHTML =
+      '<h1>Bag</h1><div class="jdgm-rev__body">Fine.</div><footer><a href="/pages/contact">Contact</a><p>We accept Visa and PayPal.</p></footer>';
+    const result = await collectPage();
+    expect(result.pageSignals).toMatchObject({
+      paymentMethods: ['credit-card', 'paypal'],
+      hasContactPage: true,
+      hasReturnPolicy: false,
+    });
   });
 });

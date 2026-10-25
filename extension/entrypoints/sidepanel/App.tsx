@@ -122,6 +122,7 @@ export function App() {
           productTitle: 'Everyday travel pack',
           instagramLinks: [],
           reviews: [],
+          pageSignals: null,
           extractionLimitations: [],
         };
       } else {

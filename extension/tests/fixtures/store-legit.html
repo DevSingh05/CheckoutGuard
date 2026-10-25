@@ -1,0 +1,61 @@
+<script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      { "@type": "Organization", "name": "Cedar Trail" },
+      {
+        "@type": "Product",
+        "name": "Everyday travel pack",
+        "offers": {
+          "@type": "Offer",
+          "price": "89.00",
+          "priceCurrency": "USD",
+          "priceSpecification": {
+            "@type": "UnitPriceSpecification",
+            "priceType": "https://schema.org/StrikethroughPrice",
+            "price": "110.00"
+          }
+        }
+      }
+    ]
+  }
+</script>
+<meta property="product:price:amount" content="999.00" />
+<header>
+  <a href="/">Cedar Trail</a>
+  <a href="/collections/packs">Packs</a>
+  <a href="/pages/about-us">Our story</a>
+</header>
+<main>
+  <h1>Everyday travel pack</h1>
+  <div class="price"><span class="money">$89.00</span></div>
+  <p>Travel visa requirements vary; this pack fits passports.</p>
+  <a href="/collections/gift-cards">Gift cards</a>
+</main>
+<footer>
+  <a href="/policies/refund-policy">Refund policy</a>
+  <a href="/pages/contact">Contact us</a>
+  <a href="mailto:help@cedar-trail.example">help@cedar-trail.example</a>
+  <a href="tel:+15555550100">+1 555 555 0100</a>
+  <ul class="list-payment" aria-label="Payment methods">
+    <li>
+      <svg
+        class="icon icon--full-color"
+        role="img"
+        aria-labelledby="pi-american_express"
+      >
+        <title id="pi-american_express">American Express</title>
+      </svg>
+    </li>
+    <li>
+      <svg class="icon icon--full-color" role="img">
+        <title>Mastercard</title>
+      </svg>
+    </li>
+    <li><img src="/cdn/shop/files/paypal.svg?v=12" alt="PayPal" /></li>
+    <li><span class="visually-hidden">Apple Pay</span></li>
+    <li><img src="/cdn/payment/shopify_pay.png" alt="Shop Pay" /></li>
+    <li><svg aria-label="Discover"></svg></li>
+  </ul>
+  <p>Pay in 4 interest-free installments with Klarna.</p>
+</footer>

@@ -210,5 +210,6 @@ class AnalyzeResponse(BaseModel):
     decision: Decision
     payment: PaymentGuidance
     amountAtStake: AmountAtStake | None = None
+    brief: Brief | None = None
     scannedAt: datetime = Field(default_factory=now)
     demo: bool = False

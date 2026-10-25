@@ -4,6 +4,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
+from .brief import BriefWriter
 from .models import AnalyzeRequest, AnalyzeResponse
 from .providers.instagram import InstagramProvider
 from .providers.reddit import RedditProvider
@@ -33,6 +34,7 @@ analyzer = Analyzer(
     },
     timeout=settings.provider_timeout,
     ttl=settings.cache_ttl,
+    brief=BriefWriter(settings.anthropic_api_key),
 )
 
 

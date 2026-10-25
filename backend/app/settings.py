@@ -9,6 +9,7 @@ class Settings:
     backboard_api_key: str = ""
     apify_token: str = ""
     gptzero_api_key: str = ""
+    anthropic_api_key: str = ""
     cors_origins: str = "http://localhost:3000,http://localhost:5173"
     extension_id: str = ""
     provider_timeout: float = 45
@@ -21,6 +22,7 @@ class Settings:
             backboard_api_key=os.getenv("BACKBOARD_API_KEY", ""),
             apify_token=os.getenv("APIFY_TOKEN", ""),
             gptzero_api_key=os.getenv("GPTZERO_API_KEY", ""),
+            anthropic_api_key=os.getenv("ANTHROPIC_API_KEY", ""),
             cors_origins=os.getenv("CORS_ORIGINS", cls.cors_origins),
             extension_id=os.getenv("EXTENSION_ID", ""),
             provider_timeout=max(1, min(50, float(os.getenv("PROVIDER_TIMEOUT", "45")))),

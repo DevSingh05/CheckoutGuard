@@ -4,6 +4,7 @@ import json
 from typing import Protocol
 from urllib.parse import urlsplit
 
+from .brief import BriefWriter, template
 from .cache import TTLCache
 from .demo import MERCHANTS, demo_sources
 from .models import AnalyzeRequest, AnalyzeResponse, Source, SourceResult
@@ -17,8 +18,15 @@ class Provider(Protocol):
 
 
 class Analyzer:
-    def __init__(self, providers: dict[Source, Provider], timeout: float = 45, ttl: int = 900):
+    def __init__(
+        self,
+        providers: dict[Source, Provider],
+        timeout: float = 45,
+        ttl: int = 900,
+        brief: BriefWriter | None = None,
+    ):
         self.providers = providers
+        self.brief = brief or BriefWriter()
         self.timeout = timeout
         self.cache = TTLCache(ttl)
         self.semaphore = asyncio.Semaphore(6)
@@ -72,7 +80,7 @@ class Analyzer:
         risk, coverage = score(sources)
         payment = guidance(signals.paymentMethods if signals else None)
         summary, steps = narrative(risk, coverage, payment.recommended)
-        return AnalyzeResponse(
+        result = AnalyzeResponse(
             domain=domain,
             productTitle="Everyday travel pack" if request.demo else request.productTitle,
             overallRisk=risk,
@@ -86,3 +94,6 @@ class Analyzer:
             amountAtStake=amount_at_stake(signals),
             demo=bool(request.demo),
         )
+        # Demo stays offline and deterministic.
+        result.brief = template(result) if request.demo else await self.brief.write(result)
+        return result

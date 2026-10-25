@@ -8,6 +8,7 @@ import samples from './fixtures/analysis.json';
 const mocks = vi.hoisted(() => ({
   changed: [] as (() => void)[],
   stored: new Map<string, unknown>(),
+  tab: {} as { id?: number; url?: string },
 }));
 vi.mock('../lib/browser', () => ({
   inExtension: false,
@@ -24,12 +25,17 @@ vi.mock('../lib/browser', () => ({
   },
   browser: {
     tabs: {
-      query: async () => [{ id: 1, url: 'https://shop.example/products/bag' }],
+      query: async () => [mocks.tab],
       onActivated: {
         addListener: (fn: () => void) => mocks.changed.push(fn),
         removeListener: () => {},
       },
       onUpdated: { addListener: () => {}, removeListener: () => {} },
+    },
+    scripting: {
+      executeScript: async () => {
+        throw new Error('Cannot access contents of the page.');
+      },
     },
   },
 }));
@@ -49,6 +55,7 @@ beforeEach(async () => {
   ).IS_REACT_ACT_ENVIRONMENT = true;
   mocks.changed.length = 0;
   mocks.stored.clear();
+  mocks.tab = { id: 1, url: 'https://shop.example/products/bag' };
   await mount();
 });
 afterEach(async () => {
@@ -331,5 +338,29 @@ describe('recent checks', () => {
     mocks.stored.set('recentChecks', 'not a list');
     await mount();
     expect(container.querySelector('.recent')).toBeNull();
+  });
+});
+
+describe('live tab access', () => {
+  it('lets a tab Chrome has not granted yet be checked and explains the toolbar click', async () => {
+    await act(async () => root.unmount());
+    mocks.tab = { id: 7 };
+    await mount();
+    const live = Array.from(container.querySelectorAll('button')).find((b) =>
+      b.textContent?.includes('Live check'),
+    )!;
+    await act(async () => {
+      live.click();
+    });
+    expect(container.querySelector('.store-card strong')?.textContent).toBe(
+      'This tab',
+    );
+    expect(scan().disabled).toBe(false);
+    await act(async () => {
+      scan().click();
+    });
+    expect(container.querySelector('[role="alert"]')?.textContent).toContain(
+      'toolbar icon',
+    );
   });
 });

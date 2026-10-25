@@ -8,7 +8,7 @@ Run on Linux (Node 22.22, Python 3.13 via uv) after `uv sync` and `npm install`.
 | --- | --- |
 | Backend pytest | **91 passed** |
 | Ruff lint / format | Clean |
-| Extension Vitest | **44 passed**: 21 extraction (review adapters, payment/policy/price signals, false-positive guards), 20 panel behavior, 3 recent-checks storage |
+| Extension Vitest | **45 passed**: 21 extraction (review adapters, payment/policy/price signals, false-positive guards), 21 panel behavior, 3 recent-checks storage |
 | `tsc --noEmit` (full WXT) | Passed |
 | ESLint / Prettier | Clean |
 | WXT build + manifest check | Passed: MV3 side panel, explicit-click extraction, one backend host, permissions limited to `sidePanel`, `activeTab`, `scripting`, `storage` |

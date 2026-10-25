@@ -175,7 +175,7 @@ make test      # pytest + ruff, then vitest, tsc, eslint, prettier, WXT build
 make format
 ```
 
-As of 2026-10-25, 91 backend tests and 44 extension tests pass, and typecheck, lint, format, and the WXT build are clean. Details are in [docs/VALIDATION.md](docs/VALIDATION.md).
+As of 2026-10-25, 91 backend tests and 45 extension tests pass, and typecheck, lint, format, and the WXT build are clean. Details are in [docs/VALIDATION.md](docs/VALIDATION.md).
 
 ```text
 backend/app/

@@ -127,12 +127,20 @@ export function App() {
     ) => {
       if (change.url || change.status === 'loading') void sync();
     };
+    // Clicking the toolbar icon grants access without a tab event, so re-read when the panel regains focus.
+    const refocus = () => {
+      if (document.visibilityState === 'visible') void sync();
+    };
     void sync();
+    window.addEventListener('focus', refocus);
+    document.addEventListener('visibilitychange', refocus);
     browser.tabs.onActivated.addListener(sync);
     browser.tabs.onUpdated.addListener(changed);
     return () => {
       disposed = true;
       controller.current?.abort();
+      window.removeEventListener('focus', refocus);
+      document.removeEventListener('visibilitychange', refocus);
       browser.tabs.onActivated.removeListener(sync);
       browser.tabs.onUpdated.removeListener(changed);
     };
@@ -156,7 +164,8 @@ export function App() {
           extractionLimitations: [],
         };
       } else {
-        if (!tab.id || !allowed(tab.url))
+        // Without the toolbar-click grant Chrome hides the URL, so let injection decide.
+        if (!tab.id || (tab.url !== undefined && !allowed(tab.url)))
           throw new Error(
             'Open a public product page and click the CheckoutGuard toolbar icon.',
           );
@@ -174,6 +183,11 @@ export function App() {
         page = await browser.tabs.sendMessage(tab.id, {
           type: 'checkoutguard:extract',
         });
+        if (!allowed(page.url))
+          throw new Error(
+            'CheckoutGuard does not read checkout, cart, account or login pages.',
+          );
+        setTab((t) => ({ ...t, url: page.url }));
       }
       if (version !== generation.current) return;
       setPhase(
@@ -236,11 +250,15 @@ export function App() {
       if (version === generation.current) setPhase('');
     }
   }
+  // A tab without a URL means Chrome has not granted this tab to the extension yet.
+  const hidden = !demo && tab.id !== undefined && tab.url === undefined;
   const domain = demo
     ? merchantNames[scenario]
     : allowed(tab.url)
       ? new URL(tab.url!).hostname
-      : 'No store selected';
+      : hidden
+        ? 'This tab'
+        : 'No store selected';
   const high = result?.overallRisk != null && result.overallRisk >= 60;
   const label = result?.limitedEvidence
     ? 'Limited evidence'
@@ -311,14 +329,16 @@ export function App() {
             <p>
               {demo
                 ? 'Everyday travel pack · Fictional store'
-                : tab.title || 'Open a public product page to begin'}
+                : hidden
+                  ? 'Click Check this store. If access is needed, click the CheckoutGuard toolbar icon on this tab first.'
+                  : tab.title || 'Open a public product page to begin'}
             </p>
           </div>
           <span className="store-dot" />
         </section>
         <button
           className="primary"
-          disabled={!!phase || (!demo && !allowed(tab.url))}
+          disabled={!!phase || (!demo && !hidden && !allowed(tab.url))}
           onClick={() => void scan()}
         >
           <Search size={18} />

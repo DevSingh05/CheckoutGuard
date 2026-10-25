@@ -9,6 +9,7 @@ const mocks = vi.hoisted(() => ({
   changed: [] as (() => void)[],
   stored: new Map<string, unknown>(),
   tab: {} as { id?: number; url?: string },
+  requested: [] as string[][],
 }));
 vi.mock('../lib/browser', () => ({
   inExtension: false,
@@ -31,6 +32,12 @@ vi.mock('../lib/browser', () => ({
         removeListener: () => {},
       },
       onUpdated: { addListener: () => {}, removeListener: () => {} },
+    },
+    permissions: {
+      request: async ({ origins }: { origins: string[] }) => {
+        mocks.requested.push(origins);
+        return true;
+      },
     },
     scripting: {
       executeScript: async () => {
@@ -55,6 +62,7 @@ beforeEach(async () => {
   ).IS_REACT_ACT_ENVIRONMENT = true;
   mocks.changed.length = 0;
   mocks.stored.clear();
+  mocks.requested.length = 0;
   mocks.tab = { id: 1, url: 'https://shop.example/products/bag' };
   await mount();
 });

@@ -619,6 +619,7 @@ footer span {
   border-radius: 9px;
   color: #895134;
   margin-top: 16px;
+  flex-wrap: wrap;
 }
 .notice svg {
   flex-shrink: 0;
@@ -627,6 +628,23 @@ footer span {
   font-size: 12px;
   line-height: 1.7;
   margin: 0;
+  flex: 1 1 0;
+}
+.notice button {
+  flex-basis: 100%;
+  margin-left: 27px;
+  padding: 9px 12px;
+  border-radius: 8px;
+  border: 0;
+  background: #1f5a44;
+  color: #fff;
+  font-weight: 600;
+  font-size: 12px;
+  cursor: pointer;
+}
+.notice button:focus-visible {
+  outline: 2px solid #1f5a44;
+  outline-offset: 2px;
 }
 @media (prefers-reduced-motion: reduce) {
   *,

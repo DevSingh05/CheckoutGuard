@@ -21,6 +21,12 @@ interface PanelBrowser {
       (id: number, change: { url?: string; status?: string }) => void
     >;
   };
+  runtime?: {
+    onMessage: Event<(message: { type?: string }) => void>;
+  };
+  permissions?: {
+    request(permissions: { origins: string[] }): Promise<boolean>;
+  };
   scripting: {
     executeScript(options: {
       target: { tabId: number };

@@ -80,6 +80,7 @@ export function App() {
   const [result, setResult] = useState<Analysis | null>(null);
   const [phase, setPhase] = useState('');
   const [error, setError] = useState('');
+  const [needsAccess, setNeedsAccess] = useState(false);
   const [recent, setRecent] = useState<RecentCheck[]>([]);
   const [announcement, setAnnouncement] = useState('');
   const resultHeading = useRef<HTMLHeadingElement>(null);
@@ -91,6 +92,7 @@ export function App() {
     setResult(null);
     setPhase('');
     setError('');
+    setNeedsAccess(false);
     setAnnouncement('');
   }, []);
   useEffect(() => {
@@ -134,8 +136,12 @@ export function App() {
     void sync();
     window.addEventListener('focus', refocus);
     document.addEventListener('visibilitychange', refocus);
+    const granted = (message: { type?: string }) => {
+      if (message?.type === 'checkoutguard:granted') void sync();
+    };
     browser.tabs.onActivated.addListener(sync);
     browser.tabs.onUpdated.addListener(changed);
+    browser.runtime?.onMessage.addListener(granted);
     return () => {
       disposed = true;
       controller.current?.abort();
@@ -143,10 +149,29 @@ export function App() {
       document.removeEventListener('visibilitychange', refocus);
       browser.tabs.onActivated.removeListener(sync);
       browser.tabs.onUpdated.removeListener(changed);
+      browser.runtime?.onMessage.removeListener(granted);
     };
   }, [invalidate]);
 
-  async function scan(refresh = false) {
+  async function allowStores() {
+    try {
+      // Must run straight from the click so Chrome shows its permission prompt.
+      const ok = await browser.permissions!.request({
+        origins: ['https://*/*', 'http://*/*'],
+      });
+      if (!ok) return;
+      const [active] = await browser.tabs.query({
+        active: true,
+        currentWindow: true,
+      });
+      setTab(active || {});
+      await scan(false, active);
+    } catch {
+      setError('Chrome did not grant access. Click the toolbar icon instead.');
+    }
+  }
+
+  async function scan(refresh = false, current: Tab = tab) {
     invalidate();
     const version = generation.current;
     const abort = new AbortController();
@@ -165,22 +190,23 @@ export function App() {
         };
       } else {
         // Without the toolbar-click grant Chrome hides the URL, so let injection decide.
-        if (!tab.id || (tab.url !== undefined && !allowed(tab.url)))
+        if (!current.id || (current.url !== undefined && !allowed(current.url)))
           throw new Error(
             'Open a public product page and click the CheckoutGuard toolbar icon.',
           );
         setPhase('Reading public product-page content…');
         try {
           await browser.scripting.executeScript({
-            target: { tabId: tab.id },
+            target: { tabId: current.id },
             files: ['/content-scripts/extractor.js'],
           });
         } catch {
+          setNeedsAccess(true);
           throw new Error(
-            'Click the CheckoutGuard toolbar icon on this tab to grant page access, then retry.',
+            'CheckoutGuard needs permission to read this page. Allow it on store pages below, or click the CheckoutGuard toolbar icon on this tab, then retry.',
           );
         }
-        page = await browser.tabs.sendMessage(tab.id, {
+        page = await browser.tabs.sendMessage(current.id, {
           type: 'checkoutguard:extract',
         });
         if (!allowed(page.url))
@@ -374,6 +400,11 @@ export function App() {
           <div className="notice" role="alert">
             <AlertTriangle size={18} />
             <p>{error}</p>
+            {needsAccess && browser.permissions && (
+              <button type="button" onClick={() => void allowStores()}>
+                Allow on store pages
+              </button>
+            )}
           </div>
         )}
         {!result && !phase && (

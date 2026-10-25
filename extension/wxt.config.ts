@@ -26,6 +26,8 @@ export default defineConfig({
       'A little clarity before checkout. Investigate public store evidence on your terms.',
     permissions: ['sidePanel', 'activeTab', 'scripting', 'storage'],
     host_permissions: [`${backend.origin}/*`],
+    // Asked for only when the user presses "Allow on store pages" in the panel.
+    optional_host_permissions: ['https://*/*', 'http://*/*'],
     action: { default_title: 'Open CheckoutGuard' },
   },
 });

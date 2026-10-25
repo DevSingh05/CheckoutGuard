@@ -1,4 +1,4 @@
-.PHONY: install backend extension preview test format video
+.PHONY: install backend extension preview test format
 install:
 	cd backend && uv sync
 	cd backend && if [ ! -e .env ]; then cp .env.example .env; fi
@@ -15,5 +15,3 @@ test:
 format:
 	cd backend && uv run ruff format .
 	cd extension && npm run format
-video:
-	node showcase/video/render.mjs

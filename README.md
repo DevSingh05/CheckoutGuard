@@ -10,11 +10,10 @@ CheckoutGuard is a Chrome side panel for the moment right before you pay a store
 You get one of three verdicts, **Proceed**, **Protect your payment**, or **Pause before paying**, with the reasons behind it. CheckoutGuard never calls a store "safe". It shows what the evidence says and how much of it there is.
 
 <p align="center">
-  <img src="showcase/video/assets/el-decision-warning.png" width="380" alt="Decision banner: Pause before paying, with reasons">
-  <img src="showcase/video/assets/el-pay-warning.png" width="380" alt="How to pay card ranking credit card above crypto and Zelle">
+  <img src="docs/images/decision.png" width="380" alt="Decision banner: Pause before paying, with reasons">
+  <img src="docs/images/how-to-pay.png" width="380" alt="How to pay card ranking credit card above crypto and Zelle">
 </p>
 
-> 🎬 Demo video: [`showcase/checkoutguard-demo.mp4`](showcase/checkoutguard-demo.mp4). The voice-over script is in [`showcase/VOICEOVER.md`](showcase/VOICEOVER.md).
 
 ## What's in the panel
 
@@ -193,7 +192,6 @@ extension/
   entrypoints/sidepanel/components/   decision banner, payment card, brief, recent checks
   lib/                      DOM adapters + page signals, Chrome boundary, Zod contracts
   tests/                    DOM fixtures, panel behavior tests
-showcase/                   launch video, scenes, render script, voice-over
 docs/                       architecture, providers, validation
 ```
 

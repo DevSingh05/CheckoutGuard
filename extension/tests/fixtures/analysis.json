@@ -2,14 +2,14 @@
   "warning": {
     "domain": "lunar-outlet.example",
     "productTitle": "Everyday travel pack",
-    "overallRisk": 74,
+    "overallRisk": 72,
     "coverage": 100,
     "limitedEvidence": false,
     "summary": "Several concerning signals deserve a closer look before you buy. Customer reports are allegations, even when their source text is verified.",
     "nextSteps": [
       "Consider delaying this purchase until the complaints are resolved.",
       "Check the return policy and a working contact method before paying.",
-      "Use a payment method with purchase protection; keep your order records."
+      "Pay with a credit card for the strongest buyer protection, and keep your order records."
     ],
     "sources": [
       {
@@ -75,6 +75,48 @@
         "expiresAt": null
       },
       {
+        "source": "store",
+        "status": "available",
+        "score": 70.0,
+        "findings": [
+          {
+            "title": "Domain registered 23 days ago",
+            "excerpt": "Public registration records (RDAP) list lunar-outlet.example as registered on 2026-10-01.",
+            "url": "https://lunar-outlet.example/fictional-evidence/store/registration",
+            "kind": "verified-fact",
+            "concern": "domain-age",
+            "verification": "fictional",
+            "date": "2026-10-01"
+          },
+          {
+            "title": "No return policy found",
+            "excerpt": "No return or refund policy link was found on this page.",
+            "url": "https://lunar-outlet.example/fictional-evidence/store/page",
+            "kind": "observed-pattern",
+            "concern": "policy",
+            "verification": "fictional",
+            "date": null
+          },
+          {
+            "title": "Price is 72% below the listed original",
+            "excerpt": "Very large discounts are a common lure on short-lived storefronts; they are not proof of fraud.",
+            "url": "https://lunar-outlet.example/fictional-evidence/store/page",
+            "kind": "observed-pattern",
+            "concern": "pricing",
+            "verification": "fictional",
+            "date": null
+          }
+        ],
+        "limitations": [
+          "All merchants, quotations, scores and source links in this demo are fictional. Links use reserved .example domains.",
+          "Domain age and page signals are weak, indirect indicators: new legitimate stores exist, and old domains can change hands.",
+          "Page signals come from this page only and may miss policies or contact details elsewhere on the site."
+        ],
+        "checkedAt": "2026-10-24T12:00:00Z",
+        "cached": false,
+        "expiresAt": null
+      },
+      {
         "source": "reviews",
         "status": "available",
         "score": 18.0,
@@ -97,19 +139,70 @@
         "expiresAt": null
       }
     ],
+    "decision": {
+      "verdict": "pause",
+      "headline": "Pause before paying; if you buy, use a credit card",
+      "reasons": [
+        "Domain registered 23 days ago",
+        "No return policy found",
+        "Price is 72% below the listed original",
+        "Buyer reports of orders that never arrived",
+        "Buyer reports of refund problems"
+      ]
+    },
+    "payment": {
+      "options": [
+        {
+          "method": "credit-card",
+          "label": "Credit card",
+          "protection": "strong",
+          "note": "Chargeback rights under the Fair Credit Billing Act; dispute within 60 days of the statement."
+        },
+        {
+          "method": "crypto",
+          "label": "Cryptocurrency",
+          "protection": "none",
+          "note": "Irreversible. Legitimate stores rarely require it."
+        },
+        {
+          "method": "zelle",
+          "label": "Zelle",
+          "protection": "none",
+          "note": "Meant for people you know; purchases are generally not protected."
+        }
+      ],
+      "recommended": "credit-card",
+      "warning": "Avoid Zelle and Cryptocurrency: these payments cannot be reversed.",
+      "disputeSteps": [
+        "Save the order confirmation, a screenshot of the product page and every message with the store.",
+        "Contact the store in writing and give it a short deadline to ship or refund.",
+        "If it never arrives, ask your card issuer for a chargeback within 60 days of the statement date.",
+        "Report the store to your consumer protection agency, such as the FTC at reportfraud.ftc.gov in the US."
+      ]
+    },
+    "amountAtStake": {
+      "price": 35.99,
+      "compareAtPrice": 129.0,
+      "currency": "USD",
+      "discountPercent": 72
+    },
+    "brief": {
+      "text": "Pause before paying; if you buy, use a credit card. Key signals: Domain registered 23 days ago; No return policy found; Price is 72% below the listed original. Avoid Zelle and Cryptocurrency: these payments cannot be reversed.",
+      "generated": false
+    },
     "scannedAt": "2026-10-24T12:00:00Z",
     "demo": true
   },
   "positive": {
     "domain": "cedar-trail.example",
     "productTitle": "Everyday travel pack",
-    "overallRisk": 6,
+    "overallRisk": 5,
     "coverage": 100,
     "limitedEvidence": false,
     "summary": "The available evidence shows fewer concerning signals. Read the supporting experiences and limitations: this is not a guarantee of safety.",
     "nextSteps": [
       "Check the return policy and a working contact method before paying.",
-      "Use a payment method with purchase protection; keep your order records."
+      "Pay with a credit card for the strongest buyer protection, and keep your order records."
     ],
     "sources": [
       {
@@ -166,6 +259,30 @@
         "expiresAt": null
       },
       {
+        "source": "store",
+        "status": "available",
+        "score": 0.0,
+        "findings": [
+          {
+            "title": "Domain registered 6 years ago",
+            "excerpt": "Public registration records (RDAP) list cedar-trail.example as registered on 2020-09-14.",
+            "url": "https://cedar-trail.example/fictional-evidence/store/registration",
+            "kind": "verified-fact",
+            "concern": "domain-age",
+            "verification": "fictional",
+            "date": "2020-09-14"
+          }
+        ],
+        "limitations": [
+          "All merchants, quotations, scores and source links in this demo are fictional. Links use reserved .example domains.",
+          "Domain age and page signals are weak, indirect indicators: new legitimate stores exist, and old domains can change hands.",
+          "Page signals come from this page only and may miss policies or contact details elsewhere on the site."
+        ],
+        "checkedAt": "2026-10-24T12:00:00Z",
+        "cached": false,
+        "expiresAt": null
+      },
+      {
         "source": "reviews",
         "status": "available",
         "score": 2.0,
@@ -188,6 +305,60 @@
         "expiresAt": null
       }
     ],
+    "decision": {
+      "verdict": "proceed",
+      "headline": "Fewer concerns found; pay with a credit card or PayPal for protection",
+      "reasons": [
+        "Domain registered 6 years ago",
+        "Risk index 5/100 with 100% source coverage"
+      ]
+    },
+    "payment": {
+      "options": [
+        {
+          "method": "credit-card",
+          "label": "Credit card",
+          "protection": "strong",
+          "note": "Chargeback rights under the Fair Credit Billing Act; dispute within 60 days of the statement."
+        },
+        {
+          "method": "paypal",
+          "label": "PayPal",
+          "protection": "strong",
+          "note": "Purchase Protection when you pay as goods and services, not friends and family."
+        },
+        {
+          "method": "apple-pay",
+          "label": "Apple Pay",
+          "protection": "strong",
+          "note": "Protection comes from the card behind it: strong when backed by a credit card."
+        },
+        {
+          "method": "shop-pay",
+          "label": "Shop Pay",
+          "protection": "strong",
+          "note": "Protection comes from the card behind it: strong when backed by a credit card."
+        }
+      ],
+      "recommended": "credit-card",
+      "warning": null,
+      "disputeSteps": [
+        "Save the order confirmation, a screenshot of the product page and every message with the store.",
+        "Contact the store in writing and give it a short deadline to ship or refund.",
+        "If it never arrives, ask your card issuer for a chargeback within 60 days of the statement date.",
+        "Report the store to your consumer protection agency, such as the FTC at reportfraud.ftc.gov in the US."
+      ]
+    },
+    "amountAtStake": {
+      "price": 89.0,
+      "compareAtPrice": null,
+      "currency": "USD",
+      "discountPercent": null
+    },
+    "brief": {
+      "text": "Fewer concerns found; pay with a credit card or PayPal for protection. Key signals: Domain registered 6 years ago; Risk index 5/100 with 100% source coverage.",
+      "generated": false
+    },
     "scannedAt": "2026-10-24T12:00:00Z",
     "demo": true
   },
@@ -201,7 +372,7 @@
     "nextSteps": [
       "Pause and look for independent, recent buyer experiences.",
       "Check the return policy and a working contact method before paying.",
-      "Use a payment method with purchase protection; keep your order records."
+      "Pay with a credit card for the strongest buyer protection, and keep your order records."
     ],
     "sources": [
       {
@@ -225,6 +396,16 @@
         "expiresAt": null
       },
       {
+        "source": "store",
+        "status": "insufficient-data",
+        "score": null,
+        "findings": [],
+        "limitations": ["Fictional merchant: not enough substantive evidence."],
+        "checkedAt": "2026-10-24T12:00:00Z",
+        "cached": false,
+        "expiresAt": null
+      },
+      {
         "source": "reviews",
         "status": "insufficient-data",
         "score": null,
@@ -235,20 +416,83 @@
         "expiresAt": null
       }
     ],
+    "decision": {
+      "verdict": "protect",
+      "headline": "Pay only with a credit card or PayPal",
+      "reasons": ["Limited evidence (0% source coverage)"]
+    },
+    "payment": {
+      "options": [
+        {
+          "method": "credit-card",
+          "label": "Credit card",
+          "protection": "strong",
+          "note": "Chargeback rights under the Fair Credit Billing Act; dispute within 60 days of the statement."
+        },
+        {
+          "method": "paypal",
+          "label": "PayPal",
+          "protection": "strong",
+          "note": "Purchase Protection when you pay as goods and services, not friends and family."
+        },
+        {
+          "method": "debit-card",
+          "label": "Debit card",
+          "protection": "moderate",
+          "note": "Visa and Mastercard zero-liability and chargeback rules apply, but the money leaves your account first."
+        },
+        {
+          "method": "bank-transfer",
+          "label": "Bank transfer",
+          "protection": "limited",
+          "note": "Hard to reverse; banks can help only in limited cases."
+        },
+        {
+          "method": "crypto",
+          "label": "Cryptocurrency",
+          "protection": "none",
+          "note": "Irreversible. Legitimate stores rarely require it."
+        },
+        {
+          "method": "wire-transfer",
+          "label": "Wire transfer",
+          "protection": "none",
+          "note": "Irreversible once sent."
+        },
+        {
+          "method": "gift-card",
+          "label": "Gift card",
+          "protection": "none",
+          "note": "Irreversible and a common scam payment demand."
+        }
+      ],
+      "recommended": "credit-card",
+      "warning": null,
+      "disputeSteps": [
+        "Save the order confirmation, a screenshot of the product page and every message with the store.",
+        "Contact the store in writing and give it a short deadline to ship or refund.",
+        "If it never arrives, ask your card issuer for a chargeback within 60 days of the statement date.",
+        "Report the store to your consumer protection agency, such as the FTC at reportfraud.ftc.gov in the US."
+      ]
+    },
+    "amountAtStake": null,
+    "brief": {
+      "text": "Pay only with a credit card or PayPal. Key signals: Limited evidence (0% source coverage).",
+      "generated": false
+    },
     "scannedAt": "2026-10-24T12:00:00Z",
     "demo": true
   },
   "outage": {
     "domain": "lunar-outlet.example",
     "productTitle": "Everyday travel pack",
-    "overallRisk": 85,
-    "coverage": 50,
-    "limitedEvidence": true,
-    "summary": "Limited evidence. There is not enough source coverage to draw a strong conclusion. A low index here does not establish that this store is trustworthy.",
+    "overallRisk": 57,
+    "coverage": 60,
+    "limitedEvidence": false,
+    "summary": "The available evidence shows fewer concerning signals. Read the supporting experiences and limitations: this is not a guarantee of safety.",
     "nextSteps": [
-      "Pause and look for independent, recent buyer experiences.",
       "Check the return policy and a working contact method before paying.",
-      "Use a payment method with purchase protection; keep your order records."
+      "Pay with a credit card for the strongest buyer protection, and keep your order records."
     ],
     "sources": [
       {
@@ -293,6 +537,30 @@
         "expiresAt": null
       },
       {
+        "source": "store",
+        "status": "available",
+        "score": 0.0,
+        "findings": [
+          {
+            "title": "Domain registered 2 years ago",
+            "excerpt": "Public registration records (RDAP) list lunar-outlet.example as registered on 2024-10-10.",
+            "url": "https://lunar-outlet.example/fictional-evidence/store/registration",
+            "kind": "verified-fact",
+            "concern": "domain-age",
+            "verification": "fictional",
+            "date": "2024-10-10"
+          }
+        ],
+        "limitations": [
+          "All merchants, quotations, scores and source links in this demo are fictional. Links use reserved .example domains.",
+          "Domain age and page signals are weak, indirect indicators: new legitimate stores exist, and old domains can change hands.",
+          "Page signals come from this page only and may miss policies or contact details elsewhere on the site."
+        ],
+        "checkedAt": "2026-10-24T12:00:00Z",
+        "cached": false,
+        "expiresAt": null
+      },
+      {
         "source": "reviews",
         "status": "error",
         "score": null,
@@ -303,6 +571,55 @@
         "expiresAt": null
       }
     ],
+    "decision": {
+      "verdict": "protect",
+      "headline": "Pay only with a credit card or PayPal",
+      "reasons": [
+        "Buyer reports of orders that never arrived",
+        "Buyer reports of refund problems",
+        "Risk index 57/100 with 60% source coverage"
+      ]
+    },
+    "payment": {
+      "options": [
+        {
+          "method": "credit-card",
+          "label": "Credit card",
+          "protection": "strong",
+          "note": "Chargeback rights under the Fair Credit Billing Act; dispute within 60 days of the statement."
+        },
+        {
+          "method": "paypal",
+          "label": "PayPal",
+          "protection": "strong",
+          "note": "Purchase Protection when you pay as goods and services, not friends and family."
+        },
+        {
+          "method": "debit-card",
+          "label": "Debit card",
+          "protection": "moderate",
+          "note": "Visa and Mastercard zero-liability and chargeback rules apply, but the money leaves your account first."
+        }
+      ],
+      "recommended": "credit-card",
+      "warning": null,
+      "disputeSteps": [
+        "Save the order confirmation, a screenshot of the product page and every message with the store.",
+        "Contact the store in writing and give it a short deadline to ship or refund.",
+        "If it never arrives, ask your card issuer for a chargeback within 60 days of the statement date.",
+        "Report the store to your consumer protection agency, such as the FTC at reportfraud.ftc.gov in the US."
+      ]
+    },
+    "amountAtStake": {
+      "price": 49.0,
+      "compareAtPrice": null,
+      "currency": "USD",
+      "discountPercent": null
+    },
+    "brief": {
+      "text": "Pay only with a credit card or PayPal. Key signals: Buyer reports of orders that never arrived; Buyer reports of refund problems; Risk index 57/100 with 60% source coverage.",
+      "generated": false
+    },
     "scannedAt": "2026-10-24T12:00:00Z",
     "demo": true
   }

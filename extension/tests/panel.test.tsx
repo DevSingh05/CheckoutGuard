@@ -5,9 +5,23 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { App } from '../entrypoints/sidepanel/App';
 import samples from './fixtures/analysis.json';
 
-const mocks = vi.hoisted(() => ({ changed: [] as (() => void)[] }));
+const mocks = vi.hoisted(() => ({
+  changed: [] as (() => void)[],
+  stored: new Map<string, unknown>(),
+}));
 vi.mock('../lib/browser', () => ({
   inExtension: false,
+  storage: {
+    get: async (key: string) =>
+      mocks.stored.has(key) ? { [key]: mocks.stored.get(key) } : {},
+    set: async (items: Record<string, unknown>) => {
+      for (const [key, value] of Object.entries(items))
+        mocks.stored.set(key, structuredClone(value));
+    },
+    remove: async (key: string) => {
+      mocks.stored.delete(key);
+    },
+  },
   browser: {
     tabs: {
       query: async () => [{ id: 1, url: 'https://shop.example/products/bag' }],
@@ -21,17 +35,21 @@ vi.mock('../lib/browser', () => ({
 }));
 let root: Root;
 let container: HTMLDivElement;
-beforeEach(async () => {
-  (
-    globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }
-  ).IS_REACT_ACT_ENVIRONMENT = true;
-  mocks.changed.length = 0;
+const mount = async () => {
   container = document.createElement('div');
   document.body.append(container);
   root = createRoot(container);
   await act(async () => {
     root.render(<App />);
   });
+};
+beforeEach(async () => {
+  (
+    globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }
+  ).IS_REACT_ACT_ENVIRONMENT = true;
+  mocks.changed.length = 0;
+  mocks.stored.clear();
+  await mount();
 });
 afterEach(async () => {
   await act(async () => root.unmount());
@@ -39,6 +57,19 @@ afterEach(async () => {
   vi.unstubAllGlobals();
 });
 const scan = () => container.querySelector<HTMLButtonElement>('.primary')!;
+const respond = async (body: unknown) => {
+  vi.stubGlobal(
+    'fetch',
+    vi.fn().mockResolvedValue({ ok: true, json: async () => body }),
+  );
+  await act(async () => {
+    scan().click();
+  });
+};
+const text = (selector: string) =>
+  Array.from(container.querySelectorAll(selector), (n) =>
+    (n.textContent || '').trim(),
+  );
 
 describe('side panel state', () => {
   it.each(['warning', 'positive', 'limited', 'outage'] as const)(
@@ -60,10 +91,13 @@ describe('side panel state', () => {
       expect(container.querySelector('.risk-number')?.textContent).toContain(
         String(samples[scenario].overallRisk ?? '—'),
       );
-      if (['limited', 'outage'].includes(scenario))
+      if (samples[scenario].limitedEvidence)
         expect(
           container.querySelector('.result-heading')?.textContent,
         ).toContain('Limited evidence');
+      expect(container.querySelector('.decision')?.className).toContain(
+        `decision--${samples[scenario].decision.verdict}`,
+      );
     },
   );
   it('handles backend downtime without inventing evidence', async () => {
@@ -116,5 +150,186 @@ describe('side panel state', () => {
     });
     expect(container.querySelector('.results')).toBeNull();
     expect(container.querySelector('[role="alert"]')).not.toBeNull();
+  });
+});
+
+describe('checkout decision', () => {
+  it('leads with a verdict that does not rely on colour alone', async () => {
+    await respond(samples.warning);
+    const banner = container.querySelector('.decision')!;
+    expect(banner).toBe(container.querySelector('.results section'));
+    expect(banner.querySelector('.decision-label')?.textContent).toBe(
+      'Pause before paying',
+    );
+    expect(banner.querySelector('.decision-label svg')).not.toBeNull();
+    expect(banner.textContent).toContain(samples.warning.decision.headline);
+    expect(text('.decision-reasons li')).toEqual(
+      samples.warning.decision.reasons,
+    );
+  });
+  it.each([
+    ['positive', 'Fewer concerns found'],
+    ['limited', 'Protect your payment'],
+  ] as const)('labels the %s verdict in words', async (scenario, label) => {
+    await respond(samples[scenario]);
+    expect(text('.decision-label')).toEqual([label]);
+  });
+  it('ranks payment options with the recommended one highlighted', async () => {
+    await respond(samples.warning);
+    expect(text('.pay-option .pay-title strong')).toEqual([
+      'Credit card',
+      'Cryptocurrency',
+      'Zelle',
+    ]);
+    expect(text('.pay-option .badge')).toEqual([
+      'Strong protection',
+      'No protection',
+      'No protection',
+    ]);
+    const recommended = container.querySelectorAll('.pay-option.recommended');
+    expect(recommended).toHaveLength(1);
+    expect(recommended[0].textContent).toContain('Credit card');
+    expect(recommended[0].textContent).toContain('Recommended');
+    expect(container.querySelector('.pay-warning')?.textContent).toBe(
+      samples.warning.payment.warning,
+    );
+  });
+  it('shows the amount at stake and flags a steep discount', async () => {
+    await respond(samples.warning);
+    const stake = container.querySelector('.stake')!.textContent;
+    expect(stake).toContain('$35.99');
+    expect(stake).toContain('was $129.00');
+    expect(stake).toContain('72% off is unusually steep');
+    await respond(samples.positive);
+    expect(container.querySelector('.stake')?.textContent).toContain('$89.00');
+    expect(container.querySelector('.stake-hint')).toBeNull();
+  });
+  it('keeps dispute steps in a keyboard-operable disclosure', async () => {
+    await respond(samples.warning);
+    const details = container.querySelector<HTMLDetailsElement>('.dispute')!;
+    expect(details.open).toBe(false);
+    expect(details.querySelector('summary')?.textContent).toBe(
+      'If something goes wrong',
+    );
+    expect(text('.dispute li')).toEqual(samples.warning.payment.disputeSteps);
+  });
+  it('renders store basics next to the other sources', async () => {
+    await respond(samples.warning);
+    const titles = text('.source-title strong');
+    expect(titles).toContain('Store basics');
+    expect(titles).toHaveLength(4);
+    const store = Array.from(container.querySelectorAll('.source-card')).find(
+      (card) => card.textContent?.includes('Store basics'),
+    )!;
+    expect(store.hasAttribute('open')).toBe(true);
+    expect(store.textContent).toContain('Domain registered 23 days ago');
+    expect(container.querySelector('.section-heading')?.textContent).toContain(
+      '4 of 4 available',
+    );
+  });
+  it('labels template and AI-written briefs differently', async () => {
+    await respond(samples.warning);
+    expect(text('.brief h2')).toEqual(['Summary']);
+    await respond({
+      ...samples.warning,
+      brief: { text: 'Written from the findings.', generated: true },
+    });
+    expect(text('.brief h2')).toEqual([
+      'AI summary · written from the evidence above',
+    ]);
+    expect(container.querySelector('.brief p')?.textContent).toBe(
+      'Written from the findings.',
+    );
+  });
+  it('announces the result and moves focus to it', async () => {
+    await respond(samples.warning);
+    expect(
+      container.querySelector('[aria-live="polite"]')?.textContent,
+    ).toContain('Pause before paying');
+    expect(document.activeElement?.textContent).toBe(
+      'Result for lunar-outlet.example',
+    );
+  });
+  it.each([
+    ['missing', undefined],
+    ['null', null],
+  ])(
+    'still renders an older backend response with %s v2 fields',
+    async (_label, value) => {
+      const legacy: Record<string, unknown> = {
+        ...samples.warning,
+        sources: samples.warning.sources.filter((s) => s.source !== 'store'),
+      };
+      for (const key of ['decision', 'payment', 'amountAtStake', 'brief'])
+        if (value === undefined) delete legacy[key];
+        else legacy[key] = value;
+      await respond(legacy);
+      expect(container.querySelector('[role="alert"]')).toBeNull();
+      expect(container.querySelector('.risk-number')?.textContent).toContain(
+        '72',
+      );
+      expect(container.querySelector('.decision')).toBeNull();
+      expect(container.querySelector('.pay-card')).toBeNull();
+      expect(container.querySelector('.brief')).toBeNull();
+      expect(container.querySelector('.why')?.textContent).toContain(
+        samples.warning.summary,
+      );
+      expect(
+        container.querySelector('.section-heading')?.textContent,
+      ).toContain('of 3 available');
+    },
+  );
+});
+
+describe('recent checks', () => {
+  it('keeps only domain, verdict, risk and time, and can be cleared', async () => {
+    await respond(samples.warning);
+    const stored = mocks.stored.get('recentChecks') as Record<
+      string,
+      unknown
+    >[];
+    expect(stored).toHaveLength(1);
+    expect(Object.keys(stored[0]).sort()).toEqual([
+      'checkedAt',
+      'domain',
+      'risk',
+      'verdict',
+    ]);
+    expect(stored[0]).toMatchObject({
+      domain: 'lunar-outlet.example',
+      verdict: 'pause',
+      risk: 72,
+    });
+    expect(JSON.stringify(stored)).not.toContain('never arrived');
+    expect(text('.recent li strong')).toEqual(['lunar-outlet.example']);
+    expect(container.querySelector('.recent li')?.textContent).toContain(
+      'Pause',
+    );
+    await act(async () => {
+      container
+        .querySelector<HTMLButtonElement>('[aria-label="Clear recent checks"]')!
+        .click();
+    });
+    expect(container.querySelector('.recent')).toBeNull();
+    expect(mocks.stored.has('recentChecks')).toBe(false);
+  });
+  it('loads saved checks when the panel opens and ignores corrupt data', async () => {
+    await act(async () => root.unmount());
+    container.remove();
+    mocks.stored.set('recentChecks', [
+      {
+        domain: 'cedar-trail.example',
+        verdict: 'proceed',
+        risk: 5,
+        checkedAt: '2026-10-24T12:00:00Z',
+      },
+    ]);
+    await mount();
+    expect(text('.recent li strong')).toEqual(['cedar-trail.example']);
+    await act(async () => root.unmount());
+    container.remove();
+    mocks.stored.set('recentChecks', 'not a list');
+    await mount();
+    expect(container.querySelector('.recent')).toBeNull();
   });
 });

@@ -23,6 +23,8 @@ import {
   type Scenario,
 } from '../../lib/contracts';
 import type { collectPage } from '../../lib/extract';
+import { DecisionBanner, verdictCopy } from './components/DecisionBanner';
+import { BriefCard } from './components/BriefCard';
 
 const API = import.meta.env.WXT_API_URL || 'http://localhost:8000';
 const names = {
@@ -70,6 +72,8 @@ export function App() {
   const [result, setResult] = useState<Analysis | null>(null);
   const [phase, setPhase] = useState('');
   const [error, setError] = useState('');
+  const [announcement, setAnnouncement] = useState('');
+  const resultHeading = useRef<HTMLHeadingElement>(null);
   const controller = useRef<AbortController | null>(null);
   const generation = useRef(0);
   const invalidate = useCallback(() => {
@@ -78,7 +82,12 @@ export function App() {
     setResult(null);
     setPhase('');
     setError('');
+    setAnnouncement('');
   }, []);
+  useEffect(() => {
+    // Move keyboard and screen-reader focus to the new result.
+    if (result) resultHeading.current?.focus();
+  }, [result]);
   useEffect(() => {
     let disposed = false;
     const sync = async () => {
@@ -152,7 +161,7 @@ export function App() {
       setPhase(
         demo
           ? 'Loading fictional evidence from the backend…'
-          : 'Checking Reddit, Instagram and review text…',
+          : 'Checking Reddit, Instagram, store basics and review text…',
       );
       const response = await fetch(`${API}/analyze`, {
         method: 'POST',
@@ -176,7 +185,15 @@ export function App() {
           'The backend returned an incomplete result. Please retry.',
         );
       const data = parsed.data;
-      if (version === generation.current) setResult(data);
+      if (version !== generation.current) return;
+      setResult(data);
+      setAnnouncement(
+        `Result ready for ${data.domain}. ${
+          data.decision
+            ? `${verdictCopy[data.decision.verdict].label}: ${data.decision.headline}.`
+            : ''
+        } Risk index ${data.overallRisk ?? 'unavailable'}, coverage ${data.coverage}%.`,
+      );
     } catch (e) {
       if (version === generation.current)
         setError(
@@ -292,9 +309,12 @@ export function App() {
         </p>
         {!demo && (
           <p className="disclosure">
-            On click, review text goes to GPTZero, the store domain to
-            Backboard, and linked Instagram profiles to Apify through your
-            backend.
+            On click, review text goes to GPTZero, the store domain to Backboard
+            and a public domain registry (RDAP), and linked Instagram profiles
+            to Apify through your backend. Payment badges, policy links and the
+            listed price are read from the page. If configured, the backend
+            sends the findings, not the page’s review text, to Anthropic to
+            write a short summary.
           </p>
         )}
         {phase && (
@@ -328,6 +348,9 @@ export function App() {
                 <Instagram size={13} /> Instagram
               </span>
               <span>
+                <Store size={13} /> Store
+              </span>
+              <span>
                 <ScanText size={13} /> Reviews
               </span>
             </div>
@@ -340,13 +363,20 @@ export function App() {
             </div>
           </section>
         )}
+        <p className="sr-only" aria-live="polite" aria-atomic="true">
+          {announcement}
+        </p>
         {result && (
           <div className="results">
+            <h2 className="sr-only" tabIndex={-1} ref={resultHeading}>
+              Result for {result.domain}
+            </h2>
             {result.demo && (
               <div className="fixture-label">
                 FICTIONAL DEMO RESULT · NOT LIVE RESEARCH
               </div>
             )}
+            {result.decision && <DecisionBanner decision={result.decision} />}
             <section
               className={`risk-card ${result.limitedEvidence ? 'limited' : high ? 'concerning' : 'lower'}`}
             >
@@ -403,7 +433,9 @@ export function App() {
                   <details
                     className="source-card"
                     key={source.source}
-                    open={source.source === 'reddit'}
+                    open={
+                      source.source === 'reddit' || source.source === 'store'
+                    }
                   >
                     <summary>
                       <div className={`source-icon ${source.source}`}>
@@ -426,9 +458,13 @@ export function App() {
                           <div className="tags">
                             <span>{finding.kind.replaceAll('-', ' ')}</span>
                             <span>
-                              {finding.verification === 'verified'
-                                ? 'Source text checked'
-                                : finding.verification}
+                              {finding.verification !== 'verified'
+                                ? finding.verification
+                                : finding.kind === 'verified-fact'
+                                  ? 'Public record checked'
+                                  : source.source === 'store'
+                                    ? 'Seen on this page'
+                                    : 'Source text checked'}
                             </span>
                           </div>
                           <h3>{finding.title}</h3>
@@ -463,6 +499,7 @@ export function App() {
                 );
               })}
             </div>
+            {result.brief && <BriefCard brief={result.brief} />}
             <section className="next-steps">
               <h2>Your next move</h2>
               {result.nextSteps.map((step, i) => (

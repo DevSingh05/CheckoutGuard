@@ -1,6 +1,7 @@
 .PHONY: install backend extension preview test format
 install:
-	cd backend && uv sync && cp -n .env.example .env || true
+	cd backend && uv sync
+	cd backend && if [ ! -e .env ]; then cp .env.example .env; fi
 	cd extension && npm install
 backend:
 	cd backend && uv run uvicorn app.main:app --host 127.0.0.1 --port 8000 --no-access-log

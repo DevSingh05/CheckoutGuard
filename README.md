@@ -4,8 +4,8 @@
 
 CheckoutGuard is a Chrome side panel for the moment right before you pay a store you've never heard of. Click **Check this store** and it answers two questions:
 
-1. **What does the public evidence say about this store?** Real buyer reports on Reddit and Instagram, how long the domain has existed, whether the page has a return policy and contact details, how steep the discount is, and whether the store's own reviews read as AI-written.
-2. **If I still want it, how should I pay?** It reads which payment methods the page actually offers and ranks them by how well they protect your money: a credit card's chargeback rights versus a Zelle or crypto payment that can't be reversed. It also tells you what to do if the order never shows up.
+1. **What does the public evidence say about this store?** Real buyer reports on Reddit and Instagram, how long the domain has existed, whether the page has a return policy and contact details, how steep the discount is, and whether the sampled reviews share unusually similar wording.
+2. **If I still want it, how should I pay?** It reads which payment methods the page actually offers and ranks them by how well they protect your money: potential card/purchase protections versus payment methods that may be difficult to recover. It also tells you what to do if the order never shows up.
 
 You get one of three verdicts, **Proceed**, **Protect your payment**, or **Pause before paying**, with the reasons behind it. CheckoutGuard never calls a store "safe". It shows what the evidence says and how much of it there is.
 
@@ -20,7 +20,7 @@ You get one of three verdicts, **Proceed**, **Protect your payment**, or **Pause
 | Section | What it shows |
 | --- | --- |
 | **Decision** | Proceed / Protect your payment / Pause, a one-line headline, and up to five reasons, each taken from a specific finding. |
-| **How to pay** | The payment methods this page offers, ranked strong → moderate → limited → none, with a recommended method and a warning when irreversible methods are listed. |
+| **How to pay** | Observed payment methods and conditional protection guidance. If methods were not detected, the panel clearly labels the recommendations as general. |
 | **Amount at stake** | Price, the "was" price, and the discount. Discounts of 70% or more get flagged. |
 | **If something goes wrong** | 3–5 dispute steps that fit the recommended payment method. |
 | **Risk index + coverage** | A 0–100 heuristic computed by plain code, plus how much of the evidence actually came back. |
@@ -56,6 +56,23 @@ make preview     # open http://localhost:5173/preview.html
 
 This is the same React UI and the same `/analyze` endpoint. The preview can't read tabs, so it opens in demo mode. Use `localhost`, not `127.0.0.1`, or CORS will block the API calls.
 
+## If a result says “Limited evidence”
+
+Expand **Why evidence is limited** to see exactly which sources did not contribute. The panel distinguishes missing credentials, provider account rejection, rate limits, connection errors, timeouts, sparse samples, and unverified citations. **Service connection & setup → Check service setup** checks backend v0.2.0 and enabled sources without spending provider credit. The local review check needs no API key.
+
+After updating, restart the backend, reload CheckoutGuard at `chrome://extensions`, and reload the product tab. Regular rescans can reuse cached research; use force refresh after fixing setup. A low-coverage result can be correct when public evidence is genuinely sparse.
+
+Safe diagnostics, from `backend/`:
+
+```sh
+uv run python ../scripts/doctor.py
+uv run python ../scripts/doctor.py --demo
+# A real check; use the actual merchant domain. External providers can use credit.
+uv run python ../scripts/doctor.py --live https://merchant.example
+```
+
+Devpost draft, release checks, and the two-minute walkthrough are in [`submission/`](submission/CHECKLIST.md). This session has not submitted any forms.
+
 ## API keys
 
 Put these in `backend/.env` and restart the backend. Every key is optional. A missing key marks that source as unavailable; it never switches on demo mode.
@@ -64,8 +81,11 @@ Put these in `backend/.env` and restart the backend. Every key is optional. A mi
 | --- | --- | --- |
 | `BACKBOARD_API_KEY` | Reddit research (40% of the score) | [backboard.io](https://backboard.io) |
 | `APIFY_TOKEN` | Instagram comment scan (30%). Actor runs are billed. | [Apify console](https://console.apify.com/settings/integrations) |
-| `GPTZERO_API_KEY` | AI-text check on store reviews (10%) | [GPTZero API docs](https://docs.gptzero.me/api-reference/) |
+| `REVIEW_ANALYSIS_MODE` | `local` by default: key-free wording comparison (10%) | No external detector required |
+| `GPTZERO_API_KEY` | Optional paid detector, only used with `REVIEW_ANALYSIS_MODE=gptzero` | [GPTZero API docs](https://docs.gptzero.me/api-reference/) |
 | `ANTHROPIC_API_KEY` | Claude-written summary (never affects the score) | [Claude Console](https://platform.claude.com/) |
+
+The **local review** check needs no key: it requires three complete reviews and 250 characters, compares near-duplicate wording, and makes no claim about AI authorship or review truthfulness. GPTZero is disabled by default.
 
 The **store** source (20%) needs no key. It uses public RDAP registration records and the signals read from the page.
 
@@ -91,7 +111,7 @@ product page ──click──▶ extractor (content script)
                                                      ├─ Store      → RDAP domain age + page signals (keyless)
                                                      ├─ Backboard  → Reddit threads → each quote verified on the live page
                                                      ├─ Apify      → recent Instagram comments on the linked profile
-                                                     └─ GPTZero    → AI-text signal on the store's own reviews
+                                                     └─ Reviews    → local wording patterns (optional GPTZero opt-in)
                                                      ▼
                                 deterministic scoring → risk index, coverage, verdict
                                 payment table         → ranked methods, dispute steps
@@ -117,8 +137,8 @@ product page ──click──▶ extractor (content script)
 | --- | --- | --- |
 | Strong | Credit card; PayPal (goods & services); Apple Pay / Google Pay / Shop Pay / Amazon Pay backed by a credit card | Chargeback rights (Fair Credit Billing Act) or a purchase-protection program |
 | Moderate | Debit card; Klarna, Afterpay, Affirm | You can dispute, but the money is already out of your account, or you keep owing installments during the review |
-| Limited | Bank transfer | Hard to recall once sent |
-| None | Zelle, wire, crypto, gift cards, Cash App, Venmo (friends & family), Western Union | Effectively irreversible. Legitimate stores rarely require these. |
+| Limited | Bank transfer; Cash App; Venmo when transaction protections are unknown | Recovery and eligibility vary; check the transaction type and provider terms |
+| None | Zelle, wire, crypto, gift cards, Western Union | Recovery is often difficult or unavailable; confirm the actual transaction terms. |
 
 This is general consumer information, not legal or financial advice. Card issuers and payment providers set their own terms.
 
@@ -130,7 +150,7 @@ The **risk index (0–100)** is a heuristic, not a probability that the store is
 - **Coverage** is the share of the total weight that returned usable data. Under 60% shows a **Limited evidence** banner, even when the score is low. With no sources at all, the score is `—` and coverage is 0%.
 - Reddit/Instagram: each distinct verified complaint adds 25 points, up to 85. Repetitive Instagram comments can add 5.
 - Store: domain under 30 days +45, under 180 days +30, under a year +15. No return policy +10. No contact details at all +10. Discount of 70% or more +15. Only unprotected payment methods +30. Capped at 85.
-- GPTZero contributes at most 20 points, so on its own it can never produce a high-risk result. AI-written reviews aren't proof of fraud.
+- Review analysis is capped at 20/100 before weighting, including when it is the only source. The local mode measures wording repetition, not AI authorship or authenticity. The optional GPTZero signal is also weak; AI-written reviews are not proof of fraud.
 - A Reddit source counts only when two separate threads have supporting text found on the page. Instagram needs at least five readable comments and two real experiences. Unverified citations are still shown, but they don't count toward the score.
 
 "Source text checked" means the quoted wording exists at that URL. It doesn't mean the claim is true. Domain age comes from public registration records, and an old domain can still change hands.
@@ -186,7 +206,7 @@ backend/app/
   payments.py               protection tiers, ranking, dispute steps
   brief.py                  optional Claude summary with template fallback
   demo.py                   fictional fixtures
-  providers/                RDAP store check, Backboard/Reddit, Apify/Instagram, GPTZero, citation security
+  providers/                RDAP, Backboard/Reddit, Apify/Instagram, local reviews, optional GPTZero, citation security
 extension/
   entrypoints/              background worker, extractor content script, React side panel
   entrypoints/sidepanel/components/   decision banner, payment card, brief, recent checks

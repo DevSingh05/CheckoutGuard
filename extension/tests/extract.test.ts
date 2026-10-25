@@ -195,3 +195,9 @@ describe('page signals', () => {
     });
   });
 });
+
+it('keeps page signals when an unrelated link contains malformed URL encoding', () => {
+  document.body.innerHTML =
+    '<footer><a href="/bad%zz">Broken link</a><a href="/returns">Returns</a><a href="/contact">Contact</a></footer>';
+  expect(extractPageSignals().hasReturnPolicy).toBe(true);
+});

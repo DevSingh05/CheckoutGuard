@@ -9,7 +9,7 @@
     "nextSteps": [
       "Consider delaying this purchase until the complaints are resolved.",
       "Check the return policy and a working contact method before paying.",
-      "Pay with a credit card for the strongest buyer protection, and keep your order records."
+      "Consider a credit card, check purchase-protection eligibility, and keep your order records."
     ],
     "sources": [
       {
@@ -41,7 +41,10 @@
         ],
         "checkedAt": "2026-10-24T12:00:00Z",
         "cached": false,
-        "expiresAt": null
+        "expiresAt": null,
+        "diagnostic": null,
+        "sampleSize": null,
+        "verifiedCount": null
       },
       {
         "source": "instagram",
@@ -72,7 +75,10 @@
         ],
         "checkedAt": "2026-10-24T12:00:00Z",
         "cached": false,
-        "expiresAt": null
+        "expiresAt": null,
+        "diagnostic": null,
+        "sampleSize": null,
+        "verifiedCount": null
       },
       {
         "source": "store",
@@ -87,6 +93,15 @@
             "concern": "domain-age",
             "verification": "fictional",
             "date": "2026-10-01"
+          },
+          {
+            "title": "Contact information found",
+            "excerpt": "This page exposes a contact link or public contact method. This does not establish that the store will respond.",
+            "url": "https://lunar-outlet.example/fictional-evidence/store/page",
+            "kind": "observed-pattern",
+            "concern": "context",
+            "verification": "fictional",
+            "date": null
           },
           {
             "title": "No return policy found",
@@ -114,7 +129,10 @@
         ],
         "checkedAt": "2026-10-24T12:00:00Z",
         "cached": false,
-        "expiresAt": null
+        "expiresAt": null,
+        "diagnostic": null,
+        "sampleSize": null,
+        "verifiedCount": null
       },
       {
         "source": "reviews",
@@ -122,11 +140,11 @@
         "score": 18.0,
         "findings": [
           {
-            "title": "Uncertain AI-text signal",
-            "excerpt": "Fictional AI-text signal: elevated. This cannot tell us whether a review is truthful.",
+            "title": "Similar review wording",
+            "excerpt": "Fictional local pattern: several reviews share very similar wording. This is not proof of manipulation.",
             "url": "https://lunar-outlet.example/fictional-evidence/reviews/0",
             "kind": "observed-pattern",
-            "concern": "ai-text",
+            "concern": "repetition",
             "verification": "fictional",
             "date": "2026-10-20"
           }
@@ -136,7 +154,10 @@
         ],
         "checkedAt": "2026-10-24T12:00:00Z",
         "cached": false,
-        "expiresAt": null
+        "expiresAt": null,
+        "diagnostic": null,
+        "sampleSize": null,
+        "verifiedCount": null
       }
     ],
     "decision": {
@@ -156,7 +177,7 @@
           "method": "credit-card",
           "label": "Credit card",
           "protection": "strong",
-          "note": "Chargeback rights under the Fair Credit Billing Act; dispute within 60 days of the statement."
+          "note": "US credit cards may offer billing-error protections. Eligibility, issuer terms and deadlines apply."
         },
         {
           "method": "crypto",
@@ -172,13 +193,14 @@
         }
       ],
       "recommended": "credit-card",
-      "warning": "Avoid Zelle and Cryptocurrency: these payments cannot be reversed.",
+      "warning": "Be cautious with Zelle and Cryptocurrency: purchase recovery may be difficult or unavailable.",
       "disputeSteps": [
         "Save the order confirmation, a screenshot of the product page and every message with the store.",
         "Contact the store in writing and give it a short deadline to ship or refund.",
-        "If it never arrives, ask your card issuer for a chargeback within 60 days of the statement date.",
+        "If it never arrives, contact your card issuer promptly about a chargeback. US billing-error rights may require written notice within 60 days after the charge appears on your statement; check your issuer's instructions.",
         "Report the store to your consumer protection agency, such as the FTC at reportfraud.ftc.gov in the US."
-      ]
+      ],
+      "observed": true
     },
     "amountAtStake": {
       "price": 35.99,
@@ -187,7 +209,7 @@
       "discountPercent": 72
     },
     "brief": {
-      "text": "Pause before paying; if you buy, use a credit card. Key signals: Domain registered 23 days ago; No return policy found; Price is 72% below the listed original. Avoid Zelle and Cryptocurrency: these payments cannot be reversed.",
+      "text": "Pause before paying; if you buy, use a credit card. Key signals: Domain registered 23 days ago; No return policy found; Price is 72% below the listed original. Be cautious with Zelle and Cryptocurrency: purchase recovery may be difficult or unavailable.",
       "generated": false
     },
     "scannedAt": "2026-10-24T12:00:00Z",
@@ -202,7 +224,7 @@
     "summary": "The available evidence shows fewer concerning signals. Read the supporting experiences and limitations: this is not a guarantee of safety.",
     "nextSteps": [
       "Check the return policy and a working contact method before paying.",
-      "Pay with a credit card for the strongest buyer protection, and keep your order records."
+      "Consider a credit card, check purchase-protection eligibility, and keep your order records."
     ],
     "sources": [
       {
@@ -234,7 +256,10 @@
         ],
         "checkedAt": "2026-10-24T12:00:00Z",
         "cached": false,
-        "expiresAt": null
+        "expiresAt": null,
+        "diagnostic": null,
+        "sampleSize": null,
+        "verifiedCount": null
       },
       {
         "source": "instagram",
@@ -256,7 +281,10 @@
         ],
         "checkedAt": "2026-10-24T12:00:00Z",
         "cached": false,
-        "expiresAt": null
+        "expiresAt": null,
+        "diagnostic": null,
+        "sampleSize": null,
+        "verifiedCount": null
       },
       {
         "source": "store",
@@ -271,6 +299,24 @@
             "concern": "domain-age",
             "verification": "fictional",
             "date": "2020-09-14"
+          },
+          {
+            "title": "Return policy link found",
+            "excerpt": "A return or refund policy link was visible on this page. The policy's terms have not been independently verified.",
+            "url": "https://cedar-trail.example/fictional-evidence/store/page",
+            "kind": "observed-pattern",
+            "concern": "context",
+            "verification": "fictional",
+            "date": null
+          },
+          {
+            "title": "Contact information found",
+            "excerpt": "This page exposes a contact link or public contact method. This does not establish that the store will respond.",
+            "url": "https://cedar-trail.example/fictional-evidence/store/page",
+            "kind": "observed-pattern",
+            "concern": "context",
+            "verification": "fictional",
+            "date": null
           }
         ],
         "limitations": [
@@ -280,7 +326,10 @@
         ],
         "checkedAt": "2026-10-24T12:00:00Z",
         "cached": false,
-        "expiresAt": null
+        "expiresAt": null,
+        "diagnostic": null,
+        "sampleSize": null,
+        "verifiedCount": null
       },
       {
         "source": "reviews",
@@ -288,11 +337,11 @@
         "score": 2.0,
         "findings": [
           {
-            "title": "Uncertain AI-text signal",
-            "excerpt": "Fictional AI-text signal: low. Human-written reviews can still be misleading.",
+            "title": "Review wording sample inspected",
+            "excerpt": "Fictional local wording check: no near-duplicate pair found. Unique wording does not establish that reviews are genuine.",
             "url": "https://cedar-trail.example/fictional-evidence/reviews/0",
             "kind": "observed-pattern",
-            "concern": "ai-text",
+            "concern": "context",
             "verification": "fictional",
             "date": "2026-10-20"
           }
@@ -302,7 +351,10 @@
         ],
         "checkedAt": "2026-10-24T12:00:00Z",
         "cached": false,
-        "expiresAt": null
+        "expiresAt": null,
+        "diagnostic": null,
+        "sampleSize": null,
+        "verifiedCount": null
       }
     ],
     "decision": {
@@ -319,7 +371,7 @@
           "method": "credit-card",
           "label": "Credit card",
           "protection": "strong",
-          "note": "Chargeback rights under the Fair Credit Billing Act; dispute within 60 days of the statement."
+          "note": "US credit cards may offer billing-error protections. Eligibility, issuer terms and deadlines apply."
         },
         {
           "method": "paypal",
@@ -331,13 +383,13 @@
           "method": "apple-pay",
           "label": "Apple Pay",
           "protection": "strong",
-          "note": "Protection comes from the card behind it: strong when backed by a credit card."
+          "note": "Protection depends on the funding card. A wallet logo alone does not confirm purchase-protection eligibility."
         },
         {
           "method": "shop-pay",
           "label": "Shop Pay",
           "protection": "strong",
-          "note": "Protection comes from the card behind it: strong when backed by a credit card."
+          "note": "Protection depends on the funding card. A wallet logo alone does not confirm purchase-protection eligibility."
         }
       ],
       "recommended": "credit-card",
@@ -345,9 +397,10 @@
       "disputeSteps": [
         "Save the order confirmation, a screenshot of the product page and every message with the store.",
         "Contact the store in writing and give it a short deadline to ship or refund.",
-        "If it never arrives, ask your card issuer for a chargeback within 60 days of the statement date.",
+        "If it never arrives, contact your card issuer promptly about a chargeback. US billing-error rights may require written notice within 60 days after the charge appears on your statement; check your issuer's instructions.",
         "Report the store to your consumer protection agency, such as the FTC at reportfraud.ftc.gov in the US."
-      ]
+      ],
+      "observed": true
     },
     "amountAtStake": {
       "price": 89.0,
@@ -372,7 +425,7 @@
     "nextSteps": [
       "Pause and look for independent, recent buyer experiences.",
       "Check the return policy and a working contact method before paying.",
-      "Pay with a credit card for the strongest buyer protection, and keep your order records."
+      "Payment options were not identified. If offered, consider a credit card or an eligible purchase-protection checkout; verify the terms before paying."
     ],
     "sources": [
       {
@@ -383,7 +436,10 @@
         "limitations": ["Fictional merchant: not enough substantive evidence."],
         "checkedAt": "2026-10-24T12:00:00Z",
         "cached": false,
-        "expiresAt": null
+        "expiresAt": null,
+        "diagnostic": null,
+        "sampleSize": null,
+        "verifiedCount": null
       },
       {
         "source": "instagram",
@@ -393,7 +449,10 @@
         "limitations": ["Fictional merchant: not enough substantive evidence."],
         "checkedAt": "2026-10-24T12:00:00Z",
         "cached": false,
-        "expiresAt": null
+        "expiresAt": null,
+        "diagnostic": null,
+        "sampleSize": null,
+        "verifiedCount": null
       },
       {
         "source": "store",
@@ -403,7 +462,10 @@
         "limitations": ["Fictional merchant: not enough substantive evidence."],
         "checkedAt": "2026-10-24T12:00:00Z",
         "cached": false,
-        "expiresAt": null
+        "expiresAt": null,
+        "diagnostic": null,
+        "sampleSize": null,
+        "verifiedCount": null
       },
       {
         "source": "reviews",
@@ -413,12 +475,15 @@
         "limitations": ["Fictional merchant: not enough substantive evidence."],
         "checkedAt": "2026-10-24T12:00:00Z",
         "cached": false,
-        "expiresAt": null
+        "expiresAt": null,
+        "diagnostic": null,
+        "sampleSize": null,
+        "verifiedCount": null
       }
     ],
     "decision": {
       "verdict": "protect",
-      "headline": "Pay only with a credit card or PayPal",
+      "headline": "Check the missing evidence before paying",
       "reasons": ["Limited evidence (0% source coverage)"]
     },
     "payment": {
@@ -427,7 +492,7 @@
           "method": "credit-card",
           "label": "Credit card",
           "protection": "strong",
-          "note": "Chargeback rights under the Fair Credit Billing Act; dispute within 60 days of the statement."
+          "note": "US credit cards may offer billing-error protections. Eligibility, issuer terms and deadlines apply."
         },
         {
           "method": "paypal",
@@ -457,7 +522,7 @@
           "method": "wire-transfer",
           "label": "Wire transfer",
           "protection": "none",
-          "note": "Irreversible once sent."
+          "note": "Usually difficult to reverse; contact your bank immediately if something goes wrong."
         },
         {
           "method": "gift-card",
@@ -471,13 +536,14 @@
       "disputeSteps": [
         "Save the order confirmation, a screenshot of the product page and every message with the store.",
         "Contact the store in writing and give it a short deadline to ship or refund.",
-        "If it never arrives, ask your card issuer for a chargeback within 60 days of the statement date.",
+        "If it never arrives, contact your card issuer promptly about a chargeback. US billing-error rights may require written notice within 60 days after the charge appears on your statement; check your issuer's instructions.",
         "Report the store to your consumer protection agency, such as the FTC at reportfraud.ftc.gov in the US."
-      ]
+      ],
+      "observed": false
     },
     "amountAtStake": null,
     "brief": {
-      "text": "Pay only with a credit card or PayPal. Key signals: Limited evidence (0% source coverage).",
+      "text": "Check the missing evidence before paying. Key signals: Limited evidence (0% source coverage).",
       "generated": false
     },
     "scannedAt": "2026-10-24T12:00:00Z",
@@ -492,7 +558,7 @@
     "summary": "The available evidence shows fewer concerning signals. Read the supporting experiences and limitations: this is not a guarantee of safety.",
     "nextSteps": [
       "Check the return policy and a working contact method before paying.",
-      "Pay with a credit card for the strongest buyer protection, and keep your order records."
+      "Consider a credit card, check purchase-protection eligibility, and keep your order records."
     ],
     "sources": [
       {
@@ -524,7 +590,10 @@
         ],
         "checkedAt": "2026-10-24T12:00:00Z",
         "cached": false,
-        "expiresAt": null
+        "expiresAt": null,
+        "diagnostic": null,
+        "sampleSize": null,
+        "verifiedCount": null
       },
       {
         "source": "instagram",
@@ -534,7 +603,10 @@
         "limitations": ["Fictional provider outage."],
         "checkedAt": "2026-10-24T12:00:00Z",
         "cached": false,
-        "expiresAt": null
+        "expiresAt": null,
+        "diagnostic": null,
+        "sampleSize": null,
+        "verifiedCount": null
       },
       {
         "source": "store",
@@ -549,6 +621,24 @@
             "concern": "domain-age",
             "verification": "fictional",
             "date": "2024-10-10"
+          },
+          {
+            "title": "Return policy link found",
+            "excerpt": "A return or refund policy link was visible on this page. The policy's terms have not been independently verified.",
+            "url": "https://lunar-outlet.example/fictional-evidence/store/page",
+            "kind": "observed-pattern",
+            "concern": "context",
+            "verification": "fictional",
+            "date": null
+          },
+          {
+            "title": "Contact information found",
+            "excerpt": "This page exposes a contact link or public contact method. This does not establish that the store will respond.",
+            "url": "https://lunar-outlet.example/fictional-evidence/store/page",
+            "kind": "observed-pattern",
+            "concern": "context",
+            "verification": "fictional",
+            "date": null
           }
         ],
         "limitations": [
@@ -558,7 +648,10 @@
         ],
         "checkedAt": "2026-10-24T12:00:00Z",
         "cached": false,
-        "expiresAt": null
+        "expiresAt": null,
+        "diagnostic": null,
+        "sampleSize": null,
+        "verifiedCount": null
       },
       {
         "source": "reviews",
@@ -568,7 +661,10 @@
         "limitations": ["Fictional provider outage."],
         "checkedAt": "2026-10-24T12:00:00Z",
         "cached": false,
-        "expiresAt": null
+        "expiresAt": null,
+        "diagnostic": null,
+        "sampleSize": null,
+        "verifiedCount": null
       }
     ],
     "decision": {
@@ -586,7 +682,7 @@
           "method": "credit-card",
           "label": "Credit card",
           "protection": "strong",
-          "note": "Chargeback rights under the Fair Credit Billing Act; dispute within 60 days of the statement."
+          "note": "US credit cards may offer billing-error protections. Eligibility, issuer terms and deadlines apply."
         },
         {
           "method": "paypal",
@@ -606,9 +702,10 @@
       "disputeSteps": [
         "Save the order confirmation, a screenshot of the product page and every message with the store.",
         "Contact the store in writing and give it a short deadline to ship or refund.",
-        "If it never arrives, ask your card issuer for a chargeback within 60 days of the statement date.",
+        "If it never arrives, contact your card issuer promptly about a chargeback. US billing-error rights may require written notice within 60 days after the charge appears on your statement; check your issuer's instructions.",
         "Report the store to your consumer protection agency, such as the FTC at reportfraud.ftc.gov in the US."
-      ]
+      ],
+      "observed": true
     },
     "amountAtStake": {
       "price": 49.0,

@@ -1028,3 +1028,99 @@ footer span {
   color: #8a3f1f;
   background: #fcf0e9;
 }
+
+.service-setup {
+  margin: 15px 0;
+  font-size: 11px;
+  color: #52675e;
+}
+.service-setup summary {
+  padding: 8px 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.service-setup > div {
+  background: #edf2e8;
+  border: 1px solid #d9e4d3;
+  border-radius: 9px;
+  padding: 12px;
+}
+.service-setup p {
+  font-size: 11px;
+  line-height: 1.7;
+  margin: 6px 0;
+}
+.service-setup button {
+  padding: 7px 10px;
+  border-radius: 6px;
+  border: 1px solid #b6c9b4;
+  background: white;
+  color: #184c40;
+  font-size: 11px;
+}
+.service-setup ul {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0;
+}
+.service-setup li {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  margin: 5px 0;
+}
+.coverage-explainer {
+  padding: 14px;
+  border: 1px solid #e7ddba;
+  background: #fff9e9;
+  border-radius: 10px;
+  margin: 14px 0 22px;
+}
+.coverage-explainer h2 {
+  color: #73571f;
+  font-size: 12px;
+}
+.coverage-explainer p {
+  margin: 8px 0 0;
+  font-size: 11px;
+  line-height: 1.7;
+  color: #655e47;
+}
+.coverage-explainer ul {
+  list-style: none;
+  padding: 0;
+  margin: 10px 0;
+}
+.coverage-explainer li {
+  margin: 9px 0;
+  font-size: 11px;
+  line-height: 1.6;
+}
+.coverage-explainer li strong {
+  display: block;
+  color: #73571f;
+}
+.coverage-explainer li span {
+  color: #655e47;
+}
+.source-diagnostic {
+  background: #f5f4ec;
+  border-radius: 6px;
+  padding: 10px;
+  margin-top: 12px;
+  font-size: 11px;
+  line-height: 1.65;
+  color: #52604f;
+}
+.source-diagnostic strong {
+  font-weight: 600;
+}
+.source-diagnostic p {
+  margin: 5px 0 0;
+}
+.sample-count {
+  font-size: 10px;
+  color: #53654f;
+  margin-top: 12px;
+}

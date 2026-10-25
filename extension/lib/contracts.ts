@@ -44,6 +44,7 @@ const decision = z.object({
 });
 // Method stays a string so a backend that learns a new method still renders.
 const payment = z.object({
+  observed: z.boolean().optional(),
   options: z.array(
     z.object({
       method: z.string(),
@@ -89,6 +90,11 @@ export const responseSchema = z.object({
       checkedAt: z.string(),
       cached: z.boolean(),
       expiresAt: z.string().nullable(),
+      diagnostic: z
+        .object({ code: z.string(), message: z.string(), action: z.string() })
+        .nullish(),
+      sampleSize: z.number().int().nonnegative().nullish(),
+      verifiedCount: z.number().int().nonnegative().nullish(),
     }),
   ),
   // v2 additions are optional so an older backend still renders.

@@ -9,3 +9,7 @@ __pycache__/
 .env.local
 coverage/
 .DS_Store
+
+# Preserve local archives without publishing old builds or media.
+archive/*
+!archive/README.md

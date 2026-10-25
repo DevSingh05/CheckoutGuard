@@ -95,7 +95,16 @@ export function PaymentCard({
       </div>
       {recommended && (
         <p className="pay-summary">
-          Best option here: <strong>{recommended.label}</strong>
+          {payment?.observed === false
+            ? 'If offered, consider: '
+            : 'Consider: '}
+          <strong>{recommended.label}</strong>
+        </p>
+      )}
+      {payment?.observed === false && (
+        <p className="small">
+          Payment methods were not detected on this page. These are general
+          options, not confirmed checkout choices.
         </p>
       )}
       {payment?.warning && (
@@ -130,7 +139,12 @@ export function PaymentCard({
                     )}
                   </div>
                   <span className={`badge badge-${option.protection}`}>
-                    <tier.Icon size={11} aria-hidden="true" /> {tier.label}
+                    <tier.Icon size={11} aria-hidden="true" />{' '}
+                    {['apple-pay', 'google-pay', 'shop-pay'].includes(
+                      option.method,
+                    )
+                      ? 'Depends on linked card'
+                      : tier.label}
                   </span>
                   <p>{option.note}</p>
                 </div>
@@ -152,6 +166,23 @@ export function PaymentCard({
               <li key={step}>{step}</li>
             ))}
           </ol>
+          <p>
+            <a
+              href="https://www.consumerfinance.gov/ask-cfpb/how-do-i-dispute-a-charge-on-my-credit-card-bill-en-61/"
+              target="_blank"
+              rel="noreferrer"
+            >
+              US card dispute guidance ↗
+            </a>
+            {' · '}
+            <a
+              href="https://www.paypal.com/us/legalhub/paypal/buyer-protection"
+              target="_blank"
+              rel="noreferrer"
+            >
+              PayPal eligibility and time limits ↗
+            </a>
+          </p>
         </details>
       )}
     </section>

@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080">
+<rect width="1920" height="1080" fill="#f6f8f5"/>
+<rect x="90" y="82" width="70" height="70" rx="18" fill="#184c40"/>
+<path d="M125 95 106 103v17c0 13 9 22 19 28 10-6 19-15 19-28v-17Z" fill="none" stroke="#fffdf9" stroke-width="3"/>
+<path d="m115 120 8 8 14-16" fill="none" stroke="#fffdf9" stroke-width="4"/>
+<g fill="#233b37" font-family="Arial, sans-serif"><text x="181" y="132" font-size="43" font-weight="700">CheckoutGuard</text>
+<text x="92" y="279" font-size="22" letter-spacing="3" fill="#52675e">A LITTLE CLARITY BEFORE CHECKOUT</text>
+<text x="86" y="402" font-size="92" font-weight="700">Before you pay,</text><text x="86" y="509" font-size="92" font-weight="700">take a closer look.</text>
+<text x="92" y="608" font-size="34" fill="#52675e">Evidence you can inspect.</text><text x="92" y="656" font-size="34" fill="#52675e">Limits you can see. A clearer next move.</text>
+<rect x="93" y="746" width="316" height="57" rx="28" fill="#e6eee1"/><text x="115" y="783" font-size="21" fill="#184c40" font-weight="700">CHROME SIDE PANEL</text>
+<text x="94" y="958" font-size="23" fill="#52675e">HackPSU · FNB challenge · Nittany AI challenge</text>
+</g>
+<rect x="1123" y="184" width="658" height="720" rx="30" fill="#dfe7dc"/>
+<rect x="1107" y="169" width="658" height="720" rx="30" fill="#fffdf9" stroke="#d5dfcf" stroke-width="2"/>
+<g font-family="Arial, sans-serif"><text x="1144" y="224" font-size="19" fill="#684c85" font-weight="700">FICTIONAL DEMO · UI ILLUSTRATION</text><text x="1144" y="278" font-size="25" fill="#233b37" font-weight="700">lunar-outlet.example</text>
+<rect x="1140" y="316" width="590" height="250" rx="20" fill="#fcf0e9"/>
+<text x="1170" y="365" font-size="25" fill="#904828" font-weight="700">Reasons to pause</text><text x="1170" y="473" font-size="92" fill="#904828" font-weight="700">72</text><text x="1298" y="470" font-size="30" fill="#904828">/ 100</text><text x="1170" y="530" font-size="23" fill="#904828">Heuristic risk index</text>
+<text x="1146" y="625" font-size="24" fill="#233b37" font-weight="700">Evidence coverage</text><text x="1623" y="625" font-size="25" fill="#184c40">100%</text>
+<rect x="1145" y="654" width="580" height="9" rx="4" fill="#71947c"/>
+<text x="1146" y="710" font-size="20" fill="#52675e">Source availability, not statistical confidence.</text>
+<text x="1146" y="779" font-size="24" fill="#233b37" font-weight="700">Read the findings. Consider the gaps.</text><text x="1146" y="830" font-size="20" fill="#52675e">No index can guarantee a store is safe.</text>
+</g></svg>

@@ -7,9 +7,14 @@ import samples from './fixtures/analysis.json';
 
 const mocks = vi.hoisted(() => ({
   changed: [] as (() => void)[],
+  updated: [] as ((
+    id: number,
+    change: { url?: string; status?: string },
+  ) => void)[],
   stored: new Map<string, unknown>(),
   tab: {} as { id?: number; url?: string },
   requested: [] as string[][],
+  scriptOK: false,
 }));
 vi.mock('../lib/browser', () => ({
   inExtension: false,
@@ -27,11 +32,24 @@ vi.mock('../lib/browser', () => ({
   browser: {
     tabs: {
       query: async () => [mocks.tab],
+      sendMessage: async () => ({
+        url: 'https://shop.example/products/bag',
+        productTitle: 'Travel bag',
+        reviews: [],
+        instagramLinks: [],
+        extractionLimitations: [],
+        pageSignals: null,
+      }),
       onActivated: {
         addListener: (fn: () => void) => mocks.changed.push(fn),
         removeListener: () => {},
       },
-      onUpdated: { addListener: () => {}, removeListener: () => {} },
+      onUpdated: {
+        addListener: (
+          fn: (id: number, change: { url?: string; status?: string }) => void,
+        ) => mocks.updated.push(fn),
+        removeListener: () => {},
+      },
     },
     permissions: {
       request: async ({ origins }: { origins: string[] }) => {
@@ -41,7 +59,8 @@ vi.mock('../lib/browser', () => ({
     },
     scripting: {
       executeScript: async () => {
-        throw new Error('Cannot access contents of the page.');
+        if (!mocks.scriptOK)
+          throw new Error('Cannot access contents of the page.');
       },
     },
   },
@@ -61,8 +80,10 @@ beforeEach(async () => {
     globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }
   ).IS_REACT_ACT_ENVIRONMENT = true;
   mocks.changed.length = 0;
+  mocks.updated.length = 0;
   mocks.stored.clear();
   mocks.requested.length = 0;
+  mocks.scriptOK = false;
   mocks.tab = { id: 1, url: 'https://shop.example/products/bag' };
   await mount();
 });
@@ -371,4 +392,100 @@ describe('live tab access', () => {
       'Chrome blocked reading this page',
     );
   });
+});
+
+describe('scan continuity and source diagnostics', () => {
+  it('keeps a result when this panel regains focus on the same tab', async () => {
+    await respond(samples.warning);
+    await act(async () => {
+      window.dispatchEvent(new Event('focus'));
+    });
+    expect(container.querySelector('.results')).not.toBeNull();
+  });
+  it('ignores updates in an unrelated background tab', async () => {
+    await respond(samples.warning);
+    await act(async () => {
+      mocks.updated.forEach((fn) => fn(99, { status: 'loading' }));
+    });
+    expect(container.querySelector('.results')).not.toBeNull();
+  });
+  it('explains a missing provider key separately from merchant evidence', async () => {
+    const result = structuredClone(samples.limited);
+    const source = result.sources.find((s) => s.source === 'reviews')!;
+    Object.assign(source, {
+      diagnostic: {
+        code: 'missing-key',
+        message: 'Review analysis is not enabled.',
+        action: 'Configure GPTZERO_API_KEY on the backend.',
+      },
+    });
+    await respond(result);
+    expect(
+      container.querySelector('.coverage-explainer')?.textContent,
+    ).toContain('Review analysis is not enabled.');
+    expect(container.textContent).toContain(
+      'Missing information is not a warning about the store.',
+    );
+  });
+});
+
+it('checks backend setup on request and identifies a missing review key', async () => {
+  const fetcher = vi.fn().mockResolvedValue({
+    ok: true,
+    json: async () => ({
+      status: 'ok',
+      service: 'CheckoutGuard',
+      version: '0.2.0',
+      providers: {
+        reddit: true,
+        instagram: true,
+        reviews: false,
+        store: true,
+      },
+    }),
+  });
+  vi.stubGlobal('fetch', fetcher);
+  await act(async () => {
+    Array.from(container.querySelectorAll('button'))
+      .find((b) => b.textContent?.includes('Live check'))!
+      .click();
+  });
+  expect(fetcher).not.toHaveBeenCalled();
+  await act(async () => {
+    Array.from(container.querySelectorAll('button'))
+      .find((b) => b.textContent === 'Check service setup')!
+      .click();
+  });
+  expect(container.querySelector('.service-setup')?.textContent).toContain(
+    'Review text: API key missing',
+  );
+  expect(fetcher.mock.calls[0][0]).toContain('/health');
+});
+
+it('does not clear a live result when extraction strips tracking parameters', async () => {
+  await act(async () => root.unmount());
+  container.remove();
+  mocks.tab = {
+    id: 1,
+    url: 'https://shop.example/products/bag?campaign=public',
+  };
+  mocks.scriptOK = true;
+  await mount();
+  vi.stubGlobal(
+    'fetch',
+    vi.fn().mockResolvedValue({ ok: true, json: async () => samples.warning }),
+  );
+  await act(async () => {
+    Array.from(container.querySelectorAll('button'))
+      .find((b) => b.textContent?.includes('Live check'))!
+      .click();
+  });
+  await act(async () => {
+    scan().click();
+  });
+  expect(container.querySelector('.results')).not.toBeNull();
+  await act(async () => {
+    window.dispatchEvent(new Event('focus'));
+  });
+  expect(container.querySelector('.results')).not.toBeNull();
 });

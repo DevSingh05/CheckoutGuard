@@ -33,13 +33,14 @@ import { DecisionBanner, verdictCopy } from './components/DecisionBanner';
 import { PaymentCard } from './components/PaymentCard';
 import { BriefCard } from './components/BriefCard';
 import { RecentChecks } from './components/RecentChecks';
+import { CoverageDetails, ServiceSetup } from './components/CheckStatus';
 
 const API = import.meta.env.WXT_API_URL || 'http://localhost:8000';
 const names = {
   reddit: 'Reddit experiences',
   instagram: 'Instagram comments',
   store: 'Store basics',
-  reviews: 'Review text signal',
+  reviews: 'Review wording check',
 };
 const icons = {
   reddit: MessageCircle,
@@ -86,6 +87,7 @@ export function App() {
   const resultHeading = useRef<HTMLHeadingElement>(null);
   const controller = useRef<AbortController | null>(null);
   const generation = useRef(0);
+  const activeTab = useRef<Tab>({});
   const invalidate = useCallback(() => {
     generation.current += 1;
     controller.current?.abort();
@@ -110,24 +112,42 @@ export function App() {
   }, [result]);
   useEffect(() => {
     let disposed = false;
-    const sync = async () => {
-      invalidate();
-      const version = generation.current;
+    let lookup = 0;
+    const sync = async (changedTab = false) => {
+      const version = ++lookup;
+      if (changedTab) invalidate();
       try {
         const [active] = await browser.tabs.query({
           active: true,
           currentWindow: true,
         });
-        if (!disposed && version === generation.current) setTab(active || {});
+        if (disposed || version !== lookup) return;
+        const next = active || {};
+        if (
+          !changedTab &&
+          (next.id !== activeTab.current.id ||
+            next.url !== activeTab.current.url)
+        )
+          invalidate();
+        activeTab.current = next;
+        setTab(next);
       } catch {
-        if (!disposed && version === generation.current) setTab({});
+        if (!disposed && version === lookup) {
+          invalidate();
+          activeTab.current = {};
+          setTab({});
+        }
       }
     };
-    const changed = (
-      _id: number,
-      change: { url?: string; status?: string },
-    ) => {
-      if (change.url || change.status === 'loading') void sync();
+    const activated = () => {
+      void sync(true);
+    };
+    const changed = (id: number, change: { url?: string; status?: string }) => {
+      if (
+        id === activeTab.current.id &&
+        (change.url || change.status === 'loading')
+      )
+        void sync(true);
     };
     // Clicking the toolbar icon grants access without a tab event, so re-read when the panel regains focus.
     const refocus = () => {
@@ -139,7 +159,7 @@ export function App() {
     const granted = (message: { type?: string }) => {
       if (message?.type === 'checkoutguard:granted') void sync();
     };
-    browser.tabs.onActivated.addListener(sync);
+    browser.tabs.onActivated.addListener(activated);
     browser.tabs.onUpdated.addListener(changed);
     browser.runtime?.onMessage.addListener(granted);
     return () => {
@@ -147,7 +167,7 @@ export function App() {
       controller.current?.abort();
       window.removeEventListener('focus', refocus);
       document.removeEventListener('visibilitychange', refocus);
-      browser.tabs.onActivated.removeListener(sync);
+      browser.tabs.onActivated.removeListener(activated);
       browser.tabs.onUpdated.removeListener(changed);
       browser.runtime?.onMessage.removeListener(granted);
     };
@@ -165,6 +185,7 @@ export function App() {
         currentWindow: true,
       });
       setTab(active || {});
+      activeTab.current = active || {};
       await scan(false, active);
     } catch (e) {
       setError(
@@ -211,11 +232,21 @@ export function App() {
         page = await browser.tabs.sendMessage(current.id, {
           type: 'checkoutguard:extract',
         });
+        if (version !== generation.current) return;
+        if (
+          page &&
+          typeof page === 'object' &&
+          'error' in page &&
+          typeof page.error === 'string'
+        )
+          throw new Error(page.error);
         if (!allowed(page.url))
           throw new Error(
             'CheckoutGuard does not read checkout, cart, account or login pages.',
           );
-        setTab((t) => ({ ...t, url: page.url }));
+        setTab((t) => ({ ...t, url: page.url, title: page.productTitle }));
+        // Keep the browser's original URL in the identity ref. The extracted URL
+        // intentionally omits tracking parameters and is only for display/request data.
       }
       if (version !== generation.current) return;
       setPhase(
@@ -383,12 +414,14 @@ export function App() {
         </p>
         {!demo && (
           <p className="disclosure">
-            On click, review text goes to GPTZero, the store domain to Backboard
-            and a public domain registry (RDAP), and linked Instagram profiles
-            to Apify through your backend. Payment badges, policy links and the
-            listed price are read from the page. If configured, the backend
-            sends the findings, not the page’s review text, to Anthropic to
-            write a short summary.
+            On click, review text is compared locally on the backend by default.
+            The store domain goes to Backboard and a public domain registry
+            (RDAP), and linked Instagram profiles to Apify through your backend.
+            A GPTZero text signal is optional and only used if the backend
+            explicitly enables it. Payment badges, policy links and the listed
+            price are read from the page. If configured, the backend sends the
+            findings, not the page’s review text, to Anthropic to write a short
+            summary.
           </p>
         )}
         {phase && (
@@ -409,6 +442,7 @@ export function App() {
             )}
           </div>
         )}
+        {!demo && <ServiceSetup api={API} />}
         {!result && !phase && (
           <section className="intro">
             <div className="intro-symbol">
@@ -500,6 +534,7 @@ export function App() {
               </div>
               <p>Weighted source availability, not statistical confidence.</p>
             </section>
+            <CoverageDetails result={result} />
             <section className="why">
               <h2>Why this result?</h2>
               <p>{result.summary}</p>
@@ -538,6 +573,20 @@ export function App() {
                       <ChevronDown size={16} />
                     </summary>
                     <div className="source-body">
+                      {source.diagnostic && (
+                        <div className="source-diagnostic">
+                          <strong>{source.diagnostic.message}</strong>
+                          <p>{source.diagnostic.action}</p>
+                        </div>
+                      )}
+                      {source.sampleSize != null && (
+                        <p className="sample-count">
+                          {source.sampleSize} items inspected
+                          {source.verifiedCount != null
+                            ? ` · ${source.verifiedCount} supporting items`
+                            : ''}
+                        </p>
+                      )}
                       {source.findings.map((finding, i) => (
                         <article key={i} className="finding">
                           <div className="tags">
@@ -549,7 +598,9 @@ export function App() {
                                   ? 'Public record checked'
                                   : source.source === 'store'
                                     ? 'Seen on this page'
-                                    : 'Source text checked'}
+                                    : source.source === 'reviews'
+                                      ? 'Computed from review sample'
+                                      : 'Source text checked'}
                             </span>
                           </div>
                           <h3>{finding.title}</h3>

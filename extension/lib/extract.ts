@@ -466,8 +466,14 @@ export function extractPageSignals(doc: Document = document): PageSignals {
   // With almost no links the page may not have rendered: say "unknown", not "missing".
   const judged = links.length >= 5 || Boolean(doc.querySelector('footer'));
   const decide = (found: boolean) => (found ? true : judged ? false : null);
-  const hrefPath = (a: HTMLAnchorElement) =>
-    words(decodeURIComponent((a.getAttribute('href') || '').split(/[?#]/)[0]));
+  const hrefPath = (a: HTMLAnchorElement) => {
+    const raw = (a.getAttribute('href') || '').split(/[?#]/)[0];
+    try {
+      return words(decodeURIComponent(raw));
+    } catch {
+      return words(raw);
+    }
+  };
   const footerText = Array.from(
     doc.querySelectorAll('footer, [role="contentinfo"]'),
   )

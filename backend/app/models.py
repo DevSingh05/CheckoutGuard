@@ -6,8 +6,30 @@ from urllib.parse import urlsplit, urlunsplit
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-Source = Literal["reddit", "instagram", "reviews"]
+Source = Literal["reddit", "instagram", "store", "reviews"]
 Status = Literal["available", "insufficient-data", "unavailable", "error"]
+PaymentMethod = Literal[
+    "credit-card",
+    "debit-card",
+    "paypal",
+    "apple-pay",
+    "google-pay",
+    "shop-pay",
+    "amazon-pay",
+    "klarna",
+    "afterpay",
+    "affirm",
+    "crypto",
+    "zelle",
+    "wire-transfer",
+    "bank-transfer",
+    "gift-card",
+    "cash-app",
+    "venmo",
+    "western-union",
+]
+Protection = Literal["strong", "moderate", "limited", "none"]
+Money = Annotated[float, Field(ge=0, le=1_000_000)]
 
 
 def now() -> datetime:
@@ -37,6 +59,24 @@ def public_url(value: str) -> str:
     return urlunsplit((u.scheme, u.netloc.lower(), u.path, "", ""))
 
 
+class PageSignals(BaseModel):
+    """Storefront observations made by the extension on the current page only."""
+
+    paymentMethods: list[PaymentMethod] = Field(default_factory=list, max_length=16)
+    hasReturnPolicy: bool | None = None
+    hasContactPage: bool | None = None
+    hasEmail: bool | None = None
+    hasPhone: bool | None = None
+    price: Money | None = None
+    compareAtPrice: Money | None = None
+    currency: str | None = Field(default=None, pattern=r"^[A-Z]{3}$")
+
+    @field_validator("paymentMethods")
+    @classmethod
+    def dedupe(cls, values: list[str]) -> list[str]:
+        return list(dict.fromkeys(values))
+
+
 class AnalyzeRequest(BaseModel):
     url: str = Field(max_length=2048)
     productTitle: str = Field(default="", max_length=300)
@@ -49,6 +89,7 @@ class AnalyzeRequest(BaseModel):
     extractionLimitations: list[Annotated[str, Field(max_length=300)]] = Field(
         default_factory=list, max_length=8
     )
+    pageSignals: PageSignals | None = None
     demo: Literal["warning", "positive", "limited", "outage"] | None = None
     refresh: bool = False
 
@@ -87,7 +128,17 @@ class Finding(BaseModel):
     url: str | None = Field(default=None, max_length=2048)
     kind: Literal["customer-allegation", "observed-pattern", "verified-fact", "positive-experience"]
     concern: Literal[
-        "non-delivery", "refund", "counterfeit", "repetition", "ai-text", "positive", "context"
+        "non-delivery",
+        "refund",
+        "counterfeit",
+        "repetition",
+        "ai-text",
+        "positive",
+        "context",
+        "domain-age",
+        "policy",
+        "payment",
+        "pricing",
     ]
     verification: Literal["verified", "unverified", "fictional"] = "unverified"
     date: str | None = Field(default=None, max_length=50)
@@ -113,6 +164,38 @@ class SourceResult(BaseModel):
         if (self.status == "available") != (self.score is not None):
             raise ValueError("Only available sources must have a score")
         return self
+
+
+class Decision(BaseModel):
+    verdict: Literal["proceed", "protect", "pause"]
+    headline: str = Field(max_length=120)
+    reasons: list[str] = Field(default_factory=list, max_length=5)
+
+
+class PaymentOption(BaseModel):
+    method: PaymentMethod
+    label: str
+    protection: Protection
+    note: str
+
+
+class PaymentGuidance(BaseModel):
+    options: list[PaymentOption]
+    recommended: PaymentMethod | None
+    warning: str | None = None
+    disputeSteps: list[str] = Field(max_length=5)
+
+
+class AmountAtStake(BaseModel):
+    price: float
+    compareAtPrice: float | None = None
+    currency: str | None = None
+    discountPercent: int | None = None
+
+
+class Brief(BaseModel):
+    text: str = Field(max_length=1200)
+    generated: bool
 
 
 class AnalyzeResponse(BaseModel):

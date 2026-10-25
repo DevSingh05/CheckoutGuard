@@ -636,3 +636,7 @@ footer span {
     transition: none !important;
   }
 }
+.store {
+  color: #5f7258;
+  background: #eef2e8;
+}

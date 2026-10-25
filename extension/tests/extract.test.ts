@@ -8,6 +8,7 @@ import {
   extractPrice,
   detectPaymentMethods,
 } from '../lib/extract';
+import { pageSignalsSchema } from '../lib/contracts';
 afterEach(() => {
   document.body.innerHTML = '';
   vi.useRealTimers();
@@ -122,6 +123,7 @@ describe('page signals', () => {
       compareAtPrice: 110,
       currency: 'USD',
     });
+    expect(() => pageSignalsSchema.parse(extractPageSignals())).not.toThrow();
   });
   it('avoids common-word false positives', () => {
     document.body.innerHTML = `

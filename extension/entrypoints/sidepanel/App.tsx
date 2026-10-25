@@ -15,6 +15,7 @@ import {
   ScanText,
   Check,
   AlertTriangle,
+  Store,
 } from 'lucide-react';
 import {
   responseSchema,
@@ -27,11 +28,13 @@ const API = import.meta.env.WXT_API_URL || 'http://localhost:8000';
 const names = {
   reddit: 'Reddit experiences',
   instagram: 'Instagram comments',
+  store: 'Store basics',
   reviews: 'Review text signal',
 };
 const icons = {
   reddit: MessageCircle,
   instagram: Instagram,
+  store: Store,
   reviews: ScanText,
 };
 const scenarioNames = {
@@ -390,7 +393,7 @@ export function App() {
               <h2>The evidence</h2>
               <span>
                 {result.sources.filter((s) => s.status === 'available').length}{' '}
-                of 3 available
+                of {result.sources.length} available
               </span>
             </div>
             <div className="evidence-list">

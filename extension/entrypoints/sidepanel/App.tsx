@@ -166,8 +166,10 @@ export function App() {
       });
       setTab(active || {});
       await scan(false, active);
-    } catch {
-      setError('Chrome did not grant access. Click the toolbar icon instead.');
+    } catch (e) {
+      setError(
+        `Chrome did not grant access (${e instanceof Error ? e.message : String(e)}). Open chrome://extensions, CheckoutGuard, Details, and set Site access to On all sites.`,
+      );
     }
   }
 
@@ -200,10 +202,10 @@ export function App() {
             target: { tabId: current.id },
             files: ['/content-scripts/extractor.js'],
           });
-        } catch {
+        } catch (e) {
           setNeedsAccess(true);
           throw new Error(
-            'Chrome blocked reading this page. Reload the tab and retry; if it persists, allow CheckoutGuard on store pages below.',
+            `Chrome blocked reading this page (${e instanceof Error ? e.message : String(e)}). Reload the tab and retry; if it persists, allow CheckoutGuard on store pages below.`,
           );
         }
         page = await browser.tabs.sendMessage(current.id, {

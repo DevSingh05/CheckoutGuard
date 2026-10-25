@@ -23,9 +23,16 @@ import {
   type Scenario,
 } from '../../lib/contracts';
 import type { collectPage } from '../../lib/extract';
+import {
+  clearRecent,
+  loadRecent,
+  recordCheck,
+  type RecentCheck,
+} from '../../lib/recent';
 import { DecisionBanner, verdictCopy } from './components/DecisionBanner';
 import { PaymentCard } from './components/PaymentCard';
 import { BriefCard } from './components/BriefCard';
+import { RecentChecks } from './components/RecentChecks';
 
 const API = import.meta.env.WXT_API_URL || 'http://localhost:8000';
 const names = {
@@ -73,6 +80,7 @@ export function App() {
   const [result, setResult] = useState<Analysis | null>(null);
   const [phase, setPhase] = useState('');
   const [error, setError] = useState('');
+  const [recent, setRecent] = useState<RecentCheck[]>([]);
   const [announcement, setAnnouncement] = useState('');
   const resultHeading = useRef<HTMLHeadingElement>(null);
   const controller = useRef<AbortController | null>(null);
@@ -84,6 +92,15 @@ export function App() {
     setPhase('');
     setError('');
     setAnnouncement('');
+  }, []);
+  useEffect(() => {
+    let disposed = false;
+    void loadRecent().then((items) => {
+      if (!disposed) setRecent(items);
+    });
+    return () => {
+      disposed = true;
+    };
   }, []);
   useEffect(() => {
     // Move keyboard and screen-reader focus to the new result.
@@ -195,6 +212,14 @@ export function App() {
             : ''
         } Risk index ${data.overallRisk ?? 'unavailable'}, coverage ${data.coverage}%.`,
       );
+      void recordCheck({
+        domain: data.domain,
+        verdict: data.decision?.verdict ?? null,
+        risk: data.overallRisk,
+        checkedAt: new Date().toISOString(),
+      }).then((items) => {
+        if (version === generation.current) setRecent(items);
+      });
     } catch (e) {
       if (version === generation.current)
         setError(
@@ -537,6 +562,13 @@ export function App() {
             </div>
           </div>
         )}
+        <RecentChecks
+          items={recent}
+          onClear={() => {
+            setRecent([]);
+            void clearRecent();
+          }}
+        />
         <footer>
           <ShieldCheck size={12} /> A pause for perspective.
           <span>Built at HackPSU</span>

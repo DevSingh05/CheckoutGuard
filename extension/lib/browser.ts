@@ -28,8 +28,16 @@ interface PanelBrowser {
     }): Promise<unknown>;
   };
 }
-const native = (globalThis as typeof globalThis & { chrome?: PanelBrowser })
-  .chrome;
+export interface KeyValueStore {
+  get(key: string): Promise<Record<string, unknown>>;
+  set(items: Record<string, unknown>): Promise<void>;
+  remove(key: string): Promise<void>;
+}
+const native = (
+  globalThis as typeof globalThis & {
+    chrome?: PanelBrowser & { storage?: { local?: KeyValueStore } };
+  }
+).chrome;
 export const inExtension = Boolean(native?.tabs);
 const event = { addListener() {}, removeListener() {} };
 export const browser: PanelBrowser = native?.tabs
@@ -53,3 +61,37 @@ export const browser: PanelBrowser = native?.tabs
         },
       },
     };
+
+// chrome.storage.local inside the extension; localStorage (or memory when that is blocked) in browser preview.
+const memory = new Map<string, unknown>();
+const prefix = 'checkoutguard:';
+const fallbackStore: KeyValueStore = {
+  async get(key) {
+    try {
+      const raw = globalThis.localStorage?.getItem(prefix + key);
+      if (raw != null) return { [key]: JSON.parse(raw) };
+    } catch {
+      // Storage blocked or corrupt: fall through to memory.
+    }
+    return memory.has(key) ? { [key]: memory.get(key) } : {};
+  },
+  async set(items) {
+    for (const [key, value] of Object.entries(items)) {
+      memory.set(key, value);
+      try {
+        globalThis.localStorage?.setItem(prefix + key, JSON.stringify(value));
+      } catch {
+        // Memory copy still serves this session.
+      }
+    }
+  },
+  async remove(key) {
+    memory.delete(key);
+    try {
+      globalThis.localStorage?.removeItem(prefix + key);
+    } catch {
+      // Nothing persisted to remove.
+    }
+  },
+};
+export const storage: KeyValueStore = native?.storage?.local ?? fallbackStore;

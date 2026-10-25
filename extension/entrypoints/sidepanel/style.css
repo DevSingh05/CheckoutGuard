@@ -930,3 +930,83 @@ footer span {
   color: #3e544c;
   margin: 8px 0 0;
 }
+.recent {
+  margin-top: 24px;
+}
+.recent-heading {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #5b6f65;
+}
+.recent-heading h2 {
+  font-size: 12px;
+}
+.recent-heading button {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid #dfe5dd;
+  background: #fff;
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 10px;
+  color: #5b6f65;
+}
+.recent ul {
+  list-style: none;
+  padding: 0;
+  margin: 9px 0 0;
+}
+.recent li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 3px 8px;
+  padding: 8px 10px;
+  background: #fff;
+  border: 1px solid #e6ebe4;
+  border-radius: 9px;
+  margin: 5px 0;
+  font-size: 10px;
+}
+.recent li strong {
+  font-size: 11px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+  flex: 1 1 140px;
+}
+.recent-verdict {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-weight: 650;
+  padding: 2px 6px;
+  border-radius: 10px;
+  border: 1px solid #e0e6de;
+}
+.recent-risk {
+  color: #6c7a72;
+}
+.recent li time {
+  display: inline;
+  margin: 0 0 0 auto;
+}
+.recent-note {
+  font-size: 9px;
+  color: #87907f;
+  margin: 6px 0 0;
+}
+.verdict-proceed {
+  color: #3b6334;
+  background: #edf3e8;
+}
+.verdict-protect {
+  color: #6f5416;
+  background: #fff6df;
+}
+.verdict-pause {
+  color: #8a3f1f;
+  background: #fcf0e9;
+}

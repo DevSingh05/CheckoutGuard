@@ -24,7 +24,7 @@ export default defineConfig({
     },
     description:
       'A little clarity before checkout. Investigate public store evidence on your terms.',
-    permissions: ['sidePanel', 'activeTab', 'scripting'],
+    permissions: ['sidePanel', 'activeTab', 'scripting', 'storage'],
     host_permissions: [`${backend.origin}/*`],
     action: { default_title: 'Open CheckoutGuard' },
   },

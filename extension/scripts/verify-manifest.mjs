@@ -9,6 +9,12 @@ assert.ok(manifest.permissions.includes('activeTab'));
 assert.ok(!manifest.permissions.includes('tabs'));
 assert.ok(!manifest.permissions.includes('cookies'));
 assert.ok(!manifest.permissions.includes('history'));
+const allowed = ['sidePanel', 'activeTab', 'scripting', 'storage'];
+assert.deepEqual(
+  manifest.permissions.filter((p) => !allowed.includes(p)),
+  [],
+  'Unexpected extension permission',
+);
 assert.equal(manifest.host_permissions.length, 1);
 assert.ok(!manifest.host_permissions[0].includes('://*'));
 assert.equal(manifest.content_scripts?.length || 0, 0);

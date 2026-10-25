@@ -14,7 +14,7 @@ from .service import Analyzer
 from .settings import Settings
 
 settings = Settings.from_env()
-app = FastAPI(title="CheckoutGuard", version="0.1.0")
+app = FastAPI(title="CheckoutGuard", version="0.2.0")
 origins = [v.strip() for v in settings.cors_origins.split(",") if v.strip()]
 if re.fullmatch(r"[a-p]{32}", settings.extension_id):
     origins.append(f"chrome-extension://{settings.extension_id}")
@@ -30,7 +30,7 @@ analyzer = Analyzer(
         "reddit": RedditProvider(settings.backboard_api_key),
         "instagram": InstagramProvider(settings.apify_token),
         "store": StoreProvider(),
-        "reviews": ReviewProvider(settings.gptzero_api_key),
+        "reviews": ReviewProvider(settings.gptzero_api_key, mode=settings.review_analysis_mode),
     },
     timeout=settings.provider_timeout,
     ttl=settings.cache_ttl,
@@ -54,7 +54,19 @@ async def bound_body(request: Request, call_next):
 
 @app.get("/health")
 async def health():
-    return {"status": "ok", "service": "CheckoutGuard"}
+    return {
+        "status": "ok",
+        "service": "CheckoutGuard",
+        "version": app.version,
+        # Configuration presence only; this endpoint makes no paid or external calls.
+        "providers": {
+            "reddit": bool(settings.backboard_api_key),
+            "instagram": bool(settings.apify_token),
+            "reviews": settings.review_analysis_mode == "local" or bool(settings.gptzero_api_key),
+            "store": True,
+        },
+        "reviewMode": settings.review_analysis_mode,
+    }
 
 
 @app.post("/analyze", response_model=AnalyzeResponse)

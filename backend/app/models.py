@@ -149,6 +149,25 @@ class Finding(BaseModel):
         return public_url(value) if value else None
 
 
+class SourceDiagnostic(BaseModel):
+    code: Literal[
+        "missing-key",
+        "authentication",
+        "rate-limit",
+        "network",
+        "timeout",
+        "provider-error",
+        "invalid-response",
+        "no-linked-account",
+        "short-text",
+        "insufficient-sample",
+        "unverified-citations",
+        "no-results",
+    ]
+    message: str = Field(max_length=300)
+    action: str = Field(max_length=300)
+
+
 class SourceResult(BaseModel):
     source: Source
     status: Status
@@ -158,6 +177,9 @@ class SourceResult(BaseModel):
     checkedAt: datetime = Field(default_factory=now)
     cached: bool = False
     expiresAt: datetime | None = None
+    diagnostic: SourceDiagnostic | None = None
+    sampleSize: int | None = Field(default=None, ge=0, le=10000)
+    verifiedCount: int | None = Field(default=None, ge=0, le=10000)
 
     @model_validator(mode="after")
     def consistent_score(self):
@@ -184,6 +206,7 @@ class PaymentGuidance(BaseModel):
     recommended: PaymentMethod | None
     warning: str | None = None
     disputeSteps: list[str] = Field(max_length=5)
+    observed: bool = False
 
 
 class AmountAtStake(BaseModel):

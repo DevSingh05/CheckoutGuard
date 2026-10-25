@@ -9,7 +9,7 @@ from .cache import TTLCache
 from .demo import MERCHANTS, demo_signals, demo_sources
 from .models import AnalyzeRequest, AnalyzeResponse, Source, SourceResult
 from .payments import amount_at_stake, guidance
-from .providers.common import missing
+from .providers.common import provider_failure
 from .scoring import decide, narrative, score
 
 
@@ -54,13 +54,9 @@ class Analyzer:
                     result = SourceResult.model_validate(raw)
                     if result.source != source:
                         raise ValueError("Wrong provider identity")
-        except TimeoutError:
-            return missing(source, "This check timed out. Retry to check again.", "error")
-        except Exception:
+        except Exception as error:
             # Do not log provider responses, raw reviews, URLs, or credential-bearing exceptions.
-            return missing(
-                source, "This provider could not return a valid result. Retry later.", "error"
-            )
+            return provider_failure(source, error)
         self.cache.put(key, result)
         return result
 
@@ -79,7 +75,7 @@ class Analyzer:
         signals = demo_signals(request.demo) if request.demo else request.pageSignals
         risk, coverage = score(sources)
         payment = guidance(signals.paymentMethods if signals else None)
-        summary, steps = narrative(risk, coverage, payment.recommended)
+        summary, steps = narrative(risk, coverage, payment.recommended, payment.observed)
         result = AnalyzeResponse(
             domain=domain,
             productTitle="Everyday travel pack" if request.demo else request.productTitle,

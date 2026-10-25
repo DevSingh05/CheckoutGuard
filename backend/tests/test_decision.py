@@ -55,7 +55,7 @@ def test_pause_when_only_unprotected_methods():
 def test_protect_for_limited_evidence_or_moderate_risk():
     limited = run(None, 0)
     assert limited.verdict == "protect"
-    assert limited.headline == "Pay only with a credit card or PayPal"
+    assert limited.headline == "Check the missing evidence before paying"
     assert "Limited evidence (0% source coverage)" in limited.reasons
     assert run(30, 100).verdict == "protect"
 
@@ -85,6 +85,7 @@ def test_complaint_reasons_are_grounded():
                 excerpt="It never arrived.",
                 kind="customer-allegation",
                 concern="non-delivery",
+                verification="verified",
             )
         ],
     )
@@ -98,3 +99,22 @@ def test_complaint_reasons_are_grounded():
 def test_narrative_names_payment_method():
     assert "PayPal" in narrative(10, 100, "paypal")[1][1]
     assert "No listed payment method" in narrative(10, 100, None)[1][1]
+
+
+def test_unverified_allegations_do_not_drive_decision_reasons():
+    reddit = SourceResult(
+        source="reddit",
+        status="available",
+        score=0,
+        findings=[
+            Finding(
+                title="Unconfirmed",
+                excerpt="Allegation whose source could not be read.",
+                kind="customer-allegation",
+                concern="counterfeit",
+                verification="unverified",
+            )
+        ],
+    )
+    result = run(0, 100, [reddit])
+    assert not any("counterfeit" in reason.lower() for reason in result.reasons)

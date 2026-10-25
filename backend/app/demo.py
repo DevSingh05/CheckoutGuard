@@ -136,17 +136,17 @@ def demo_sources(scenario: str):
             ],
             "reviews": [
                 (
-                    "Uncertain AI-text signal",
-                    "Fictional AI-text signal: elevated. This cannot tell us whether a review is truthful.",
-                    "ai-text",
+                    "Similar review wording",
+                    "Fictional local pattern: several reviews share very similar wording. This is not proof of manipulation.",
+                    "repetition",
                 )
             ]
             if warning
             else [
                 (
-                    "Uncertain AI-text signal",
-                    "Fictional AI-text signal: low. Human-written reviews can still be misleading.",
-                    "ai-text",
+                    "Review wording sample inspected",
+                    "Fictional local wording check: no near-duplicate pair found. Unique wording does not establish that reviews are genuine.",
+                    "context",
                 )
             ],
         }[source]
@@ -157,7 +157,7 @@ def demo_sources(scenario: str):
                 concern=c,
                 verification="fictional",
                 kind="observed-pattern"
-                if c in {"ai-text", "repetition"}
+                if c in {"ai-text", "repetition", "context"}
                 else "positive-experience"
                 if c == "positive"
                 else "customer-allegation",

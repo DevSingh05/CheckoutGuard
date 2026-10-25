@@ -85,3 +85,40 @@ def test_redirect_is_not_followed():
         connect.assert_called_once_with(("151.101.1.140", 443), timeout=6)
         tls.return_value.wrap_socket.assert_called_once_with(raw, server_hostname="www.reddit.com")
         assert connection.request.call_count == 1
+
+
+def test_www_alias_can_support_the_exact_merchant():
+    quote = "My order never arrived after six weeks of waiting and repeated support requests."
+    assert supports("https://www.shop.example " + quote, "shop.example", quote)
+    assert supports("www.shop.example " + quote, "www.shop.example", quote)
+    assert not supports("www.evilshop.example " + quote, "shop.example", quote)
+
+
+def test_rdap_destination_with_private_dns_is_blocked():
+    from app.providers.security import pinned_get
+
+    with (
+        patch(
+            "socket.getaddrinfo",
+            return_value=[(socket.AF_INET, socket.SOCK_STREAM, 6, "", ("10.0.0.2", 443))],
+        ),
+        patch("socket.create_connection") as connect,
+    ):
+        with pytest.raises(ValueError, match="Non-public"):
+            pinned_get("https://registry.example/domain/shop.example", "application/rdap+json")
+        connect.assert_not_called()
+
+
+def test_merchant_link_host_survives_html_text_extraction():
+    from app.providers.security import PublicText
+
+    parser = PublicText()
+    quote = "My order never arrived after six weeks and support has not replied."
+    parser.feed(
+        '<p>I bought from <a href="https://www.shop.example/products/bag?private=token">this website</a>. '
+        + quote
+        + "</p><script>Hidden private text</script>"
+    )
+    body = " ".join(parser.parts)
+    assert supports(body, "shop.example", quote)
+    assert "private" not in body and "token" not in body

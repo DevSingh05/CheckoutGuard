@@ -67,3 +67,8 @@ def test_signals_deduped_and_bounded():
         PageSignals(currency="usd")
     with pytest.raises(ValueError):
         PageSignals(price=-1)
+
+
+def test_unknown_payment_methods_are_explicitly_general():
+    assert guidance([]).observed is False
+    assert guidance(["credit-card"]).observed is True

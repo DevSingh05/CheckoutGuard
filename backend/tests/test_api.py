@@ -188,3 +188,19 @@ def test_page_signals_shape_payment(engine):
     }
     bad = call({"url": "https://shop.example/a", "pageSignals": {"paymentMethods": ["cash"]}})
     assert bad.status_code == 422
+
+
+def test_health_reports_presence_without_exposing_keys(monkeypatch):
+    monkeypatch.setattr(main.settings, "backboard_api_key", "private-test-key")
+
+    async def run():
+        async with httpx.AsyncClient(
+            transport=httpx.ASGITransport(app=main.app), base_url="http://test"
+        ) as client:
+            return await client.get("/health")
+
+    response = asyncio.run(run())
+    assert response.status_code == 200
+    assert response.json()["providers"]["reddit"] is True
+    assert response.json()["version"] == "0.2.0"
+    assert "private-test-key" not in response.text

@@ -25,6 +25,7 @@ def evidence(result: AnalyzeResponse) -> dict:
         "decision": result.decision.model_dump(),
         "payment": {
             "recommended": result.payment.recommended,
+            "observed": result.payment.observed,
             "warning": result.payment.warning,
             "options": [
                 {"method": o.method, "protection": o.protection} for o in result.payment.options

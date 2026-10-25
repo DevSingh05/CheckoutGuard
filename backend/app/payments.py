@@ -2,13 +2,13 @@
 
 from .models import AmountAtStake, PageSignals, PaymentGuidance, PaymentMethod, PaymentOption
 
-WALLET = "Protection comes from the card behind it: strong when backed by a credit card."
+WALLET = "Protection depends on the funding card. A wallet logo alone does not confirm purchase-protection eligibility."
 INSTALLMENTS = "{} has a dispute process, but you may still owe installments while it reviews."
 TABLE: dict[PaymentMethod, tuple[str, str, str]] = {
     "credit-card": (
         "Credit card",
         "strong",
-        "Chargeback rights under the Fair Credit Billing Act; dispute within 60 days of the statement.",
+        "US credit cards may offer billing-error protections. Eligibility, issuer terms and deadlines apply.",
     ),
     "paypal": (
         "PayPal",
@@ -34,10 +34,22 @@ TABLE: dict[PaymentMethod, tuple[str, str, str]] = {
     ),
     "crypto": ("Cryptocurrency", "none", "Irreversible. Legitimate stores rarely require it."),
     "zelle": ("Zelle", "none", "Meant for people you know; purchases are generally not protected."),
-    "wire-transfer": ("Wire transfer", "none", "Irreversible once sent."),
+    "wire-transfer": (
+        "Wire transfer",
+        "none",
+        "Usually difficult to reverse; contact your bank immediately if something goes wrong.",
+    ),
     "gift-card": ("Gift card", "none", "Irreversible and a common scam payment demand."),
-    "cash-app": ("Cash App", "none", "Payments to strangers are generally not protected."),
-    "venmo": ("Venmo", "none", "Friends and family payments are not protected."),
+    "cash-app": (
+        "Cash App",
+        "limited",
+        "Person-to-person payments can be difficult to recover. Merchant checkout terms can differ; check eligibility.",
+    ),
+    "venmo": (
+        "Venmo",
+        "limited",
+        "Personal payments and eligible purchase-tagged transactions have different protection terms. Check the transaction type before paying.",
+    ),
     "western-union": ("Western Union", "none", "Irreversible money transfer."),
 }
 RANK = {"strong": 0, "moderate": 1, "limited": 2, "none": 3}
@@ -71,7 +83,7 @@ def unprotected_only(methods: list[PaymentMethod]) -> bool:
 def dispute_steps(method: PaymentMethod | None) -> list[str]:
     label = TABLE[method][0] if method else ""
     specific = {
-        "credit-card": "If it never arrives, ask your card issuer for a chargeback within 60 days of the statement date.",
+        "credit-card": "If it never arrives, contact your card issuer promptly about a chargeback. US billing-error rights may require written notice within 60 days after the charge appears on your statement; check your issuer's instructions.",
         "debit-card": "If it never arrives, ask your bank for a card chargeback as soon as possible; the money is already out of your account.",
         "paypal": "If it never arrives, open a dispute in the PayPal Resolution Center within 180 days and escalate it to a claim if needed.",
         "amazon-pay": "If it never arrives, file an A-to-z Guarantee claim with Amazon, or dispute the charge with your card issuer.",
@@ -101,9 +113,7 @@ def guidance(methods: list[PaymentMethod] | None = None) -> PaymentGuidance:
     if offered and recommended is None:
         warning = "This store only lists payment methods with little or no buyer protection."
     elif avoid:
-        warning = (
-            f"Avoid {' and '.join(TABLE[m][0] for m in avoid)}: these payments cannot be reversed."
-        )
+        warning = f"Be cautious with {' and '.join(TABLE[m][0] for m in avoid)}: purchase recovery may be difficult or unavailable."
     else:
         warning = None
     return PaymentGuidance(
@@ -114,6 +124,7 @@ def guidance(methods: list[PaymentMethod] | None = None) -> PaymentGuidance:
         recommended=recommended,
         warning=warning,
         disputeSteps=dispute_steps(recommended),
+        observed=bool(offered),
     )
 
 

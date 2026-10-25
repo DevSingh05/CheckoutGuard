@@ -1,6 +1,8 @@
 """Keyless storefront checks: RDAP domain registration date plus extension page signals."""
 
+import asyncio
 import ipaddress
+import json
 from datetime import UTC, datetime
 from urllib.parse import urljoin, urlsplit
 
@@ -11,6 +13,7 @@ from ..models import AnalyzeRequest, Finding, PageSignals, SourceResult, now, pu
 from ..payments import amount_at_stake, unprotected_only
 from ..scoring import store_score
 from .common import request_json
+from .security import pinned_get
 
 RDAP = "https://rdap.org/domain/"
 # Deliberately small: a full public suffix list is not needed to strip shop subdomains.
@@ -59,8 +62,7 @@ def rdap_redirect(base: str, location: str) -> str:
     url = urljoin(base, location)
     if urlsplit(url).scheme != "https":
         raise ValueError("RDAP redirects must stay on HTTPS")
-    public_url(url)  # Rejects credentials, odd ports, local and private hosts.
-    return url
+    return public_url(url)  # Every real connection also validates and pins DNS.
 
 
 def age_text(days: int) -> str:
@@ -112,6 +114,18 @@ def assess(
             registered.date().isoformat(),
         )
     if signals:
+        if signals.hasReturnPolicy is True:
+            add(
+                "Return policy link found",
+                "A return or refund policy link was visible on this page. The policy's terms have not been independently verified.",
+                "context",
+            )
+        if any(v is True for v in (signals.hasContactPage, signals.hasEmail, signals.hasPhone)):
+            add(
+                "Contact information found",
+                "This page exposes a contact link or public contact method. This does not establish that the store will respond.",
+                "context",
+            )
         amount = amount_at_stake(signals)
         if signals.hasReturnPolicy is False:
             add(
@@ -137,7 +151,20 @@ def assess(
                 "Every payment method found on this page offers little or no buyer protection.",
                 "payment",
             )
-    available = registered is not None or signals is not None
+    observed = signals is not None and (
+        bool(signals.paymentMethods)
+        or signals.price is not None
+        or any(
+            v is not None
+            for v in (
+                signals.hasReturnPolicy,
+                signals.hasContactPage,
+                signals.hasEmail,
+                signals.hasPhone,
+            )
+        )
+    )
+    available = registered is not None or observed
     return SourceResult(
         source="store",
         status="available" if available else "insufficient-data",
@@ -154,6 +181,23 @@ class StoreProvider:
 
     async def registered(self, domain: str) -> datetime | None:
         url = RDAP + domain
+        if self.transport is None:
+            # Registry redirects are arbitrary hostnames: validate all DNS answers and
+            # pin the destination at every hop rather than trusting lexical URL checks.
+            for _ in range(3):
+                status, kind, location, body = await asyncio.to_thread(
+                    pinned_get, url, "application/rdap+json"
+                )
+                if status in {301, 302, 303, 307, 308}:
+                    url = rdap_redirect(url, location or "")
+                    continue
+                if status != 200 or "json" not in kind:
+                    raise ValueError("Registration record unavailable")
+                data = json.loads(body)
+                break
+            else:
+                raise ValueError("Too many RDAP redirects")
+            return registration_date(data)
         async with httpx.AsyncClient(
             transport=self.transport, timeout=self.timeout, follow_redirects=False, trust_env=False
         ) as client:
@@ -170,15 +214,7 @@ class StoreProvider:
                     url = rdap_redirect(url, exc.response.headers.get("location", ""))
             else:
                 raise ValueError("Too many RDAP redirects")
-        date = next(
-            (
-                e.eventDate
-                for e in Domain.model_validate(data).events
-                if e.eventAction == "registration" and e.eventDate
-            ),
-            None,
-        )
-        return date.replace(tzinfo=UTC) if date and date.tzinfo is None else date
+        return registration_date(data)
 
     async def check(self, request: AnalyzeRequest, domain: str) -> SourceResult:
         name, registered, limitations = domain, None, []
@@ -191,7 +227,7 @@ class StoreProvider:
                 registered = await self.registered(name)
                 if registered is None:
                     limitations.append("Registration records did not include a registration date.")
-            except (httpx.HTTPError, ValueError):
+            except (httpx.HTTPError, ValueError, OSError):
                 # Do not log RDAP URLs or responses.
                 limitations.append("Domain registration records could not be retrieved.")
         return assess(
@@ -203,3 +239,15 @@ class StoreProvider:
             rdap_url=RDAP + name,
             limitations=limitations,
         )
+
+
+def registration_date(data: object) -> datetime | None:
+    date = next(
+        (
+            e.eventDate
+            for e in Domain.model_validate(data).events
+            if e.eventAction == "registration" and e.eventDate
+        ),
+        None,
+    )
+    return date.replace(tzinfo=UTC) if date and date.tzinfo is None else date

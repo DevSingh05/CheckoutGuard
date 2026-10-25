@@ -1,11 +1,12 @@
+import asyncio
 import json
 import re
 
 from pydantic import BaseModel, Field
 
-from ..models import AnalyzeRequest, Finding, SourceResult
+from ..models import AnalyzeRequest, Finding, SourceDiagnostic, SourceResult
 from ..scoring import evidence_score
-from .common import concern_for, missing
+from .common import concern_for, missing, structured_object
 from .security import citation_text, reddit_url, supports
 
 
@@ -25,10 +26,15 @@ class RedditProvider:
 
     async def check(self, request: AnalyzeRequest, domain: str) -> SourceResult:
         if not self.key:
-            return missing("reddit", "Backboard is not configured.")
+            return missing(
+                "reddit",
+                "Reddit research is not enabled: Backboard has no API key.",
+                code="missing-key",
+                action="Configure BACKBOARD_API_KEY on the backend and restart it.",
+            )
         from backboard import BackboardClient
 
-        async with BackboardClient(api_key=self.key) as client:
+        async with BackboardClient(api_key=self.key, timeout=25) as client:
             response = await client.send_message(
                 "Research public Reddit discussions about the exact merchant domain "
                 + json.dumps(domain)
@@ -39,30 +45,35 @@ class RedditProvider:
                 '"date":null}]}. Maximum 6. Use an empty array if no evidence. Never invent quotations.',
                 web_search="Auto",
             )
-        data = Research.model_validate_json(response.content)
-        findings = []
-        for item in data.findings:
-            if not reddit_url(item.url):
-                continue
+        data = Research.model_validate(structured_object(response.content))
+        candidates = [item for item in data.findings if reddit_url(item.url)]
+        verification_slots = asyncio.Semaphore(3)
+
+        async def verify(item: Candidate):
             verified = False
             try:
-                verified = supports(await citation_text(item.url), domain, item.excerpt)
-            except (ValueError, OSError):
+                async with verification_slots, asyncio.timeout(7):
+                    verified = supports(await citation_text(item.url), domain, item.excerpt)
+            except (ValueError, OSError, TimeoutError):
                 pass
             concern = concern_for(item.excerpt) or "context"
-            findings.append(
-                Finding(
-                    title="Buyer experience"
-                    if concern == "positive"
-                    else "Discussion mentioning this store",
-                    excerpt=item.excerpt,
-                    url=item.url,
-                    date=item.date,
-                    concern=concern,
-                    kind="positive-experience" if concern == "positive" else "customer-allegation",
-                    verification="verified" if verified else "unverified",
-                )
+            return Finding(
+                title="Buyer experience"
+                if concern == "positive"
+                else "Discussion mentioning this store",
+                excerpt=item.excerpt,
+                url=item.url,
+                date=item.date,
+                concern=concern,
+                kind="positive-experience"
+                if concern == "positive"
+                else "observed-pattern"
+                if concern == "context"
+                else "customer-allegation",
+                verification="verified" if verified else "unverified",
             )
+
+        findings = list(await asyncio.gather(*(verify(item) for item in candidates)))
         substantive = {
             re.search(r"/comments/([a-z0-9]+)", f.url).group(1)
             for f in findings
@@ -74,6 +85,19 @@ class RedditProvider:
             status="available" if available else "insufficient-data",
             score=evidence_score(findings) if available else None,
             findings=findings,
+            sampleSize=len(candidates),
+            verifiedCount=sum(f.verification == "verified" for f in findings),
+            diagnostic=None
+            if available
+            else SourceDiagnostic(
+                code="unverified-citations" if candidates else "no-results",
+                message=(
+                    f"Found {len(candidates)} discussions; {len(substantive)} had accessible, merchant-matched buyer evidence."
+                    if candidates
+                    else "No matching Reddit discussions were returned by the search."
+                ),
+                action="Open the linked discussions yourself; blocked or unverified text does not count toward the index.",
+            ),
             limitations=[
                 "At least two distinct, text-verified discussions are required. "
                 "Verification confirms accessible wording, not the truth of a buyer allegation. "

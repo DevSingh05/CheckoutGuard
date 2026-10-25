@@ -60,7 +60,11 @@ def test_old_domain_with_good_signals():
     signals = PageSignals(paymentMethods=["credit-card"], hasReturnPolicy=True, hasEmail=True)
     result = check(provider, signals, host="www.shop.example")
     assert result.score == 0
-    assert [f.title for f in result.findings] == ["Domain registered 6 years ago"]
+    assert [f.title for f in result.findings] == [
+        "Domain registered 6 years ago",
+        "Return policy link found",
+        "Contact information found",
+    ]
 
 
 def test_rdap_failure_keeps_page_signals():
@@ -140,3 +144,20 @@ def test_registrable(host, expected):
 
 def test_age_text():
     assert [age_text(d) for d in (1, 23, 200, 800)] == ["1 day", "23 days", "6 months", "2 years"]
+
+
+def test_empty_page_signals_do_not_create_coverage():
+    provider, _ = rdap(status=503)
+    result = check(provider, PageSignals())
+    assert result.status == "insufficient-data" and result.score is None
+
+
+def test_real_rdap_path_checks_every_redirect_before_connecting():
+    from unittest.mock import patch
+
+    with patch(
+        "app.providers.store.pinned_get", return_value=(302, "", "https://127.0.0.1/admin", b"")
+    ) as get:
+        result = check(StoreProvider())
+    assert result.status == "insufficient-data"
+    assert get.call_count == 1

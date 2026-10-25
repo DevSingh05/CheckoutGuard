@@ -30,14 +30,18 @@ def score(sources: list[SourceResult], weights: dict[str, float] | None = None):
 
 
 def narrative(
-    risk: int | None, coverage: int, recommended: str | None = None
+    risk: int | None, coverage: int, recommended: str | None = None, payment_observed: bool = True
 ) -> tuple[str, list[str]]:
     steps = [
         "Check the return policy and a working contact method before paying.",
-        f"Pay with {named(recommended)} for the strongest buyer protection, and keep your order records."
+        f"Consider {named(recommended)}, check purchase-protection eligibility, and keep your order records."
         if recommended
         else "No listed payment method offers strong protection; avoid irreversible payments and keep your order records.",
     ]
+    if not payment_observed:
+        steps[1] = (
+            "Payment options were not identified. If offered, consider a credit card or an eligible purchase-protection checkout; verify the terms before paying."
+        )
     if coverage < 60:
         return (
             "Limited evidence. There is not enough source coverage to draw a strong conclusion. "
@@ -127,7 +131,13 @@ def decide(
         if f.concern in {"policy", "pricing", "payment"}
         or (f.concern == "domain-age" and (verdict == "proceed" or (age or 0) < 365))
     ]
-    reported = {f.concern for s in available if s.source != "store" for f in s.findings}
+    reported = {
+        f.concern
+        for s in available
+        if s.source != "store"
+        for f in s.findings
+        if f.verification in {"verified", "fictional"}
+    }
     reasons += [text for concern, text in COMPLAINTS.items() if concern in reported]
     if limited:
         reasons.append(f"Limited evidence ({coverage}% source coverage)")
@@ -147,5 +157,11 @@ def decide(
             "pause": "Pause: no protected way to pay is listed",
             "protect": "Be careful: no protected way to pay is listed",
             "proceed": "Fewer concerns found, but no protected way to pay is listed",
+        }[verdict]
+    if not payment.observed:
+        headline = {
+            "pause": "Pause before paying; confirm payment protection",
+            "protect": "Check the missing evidence before paying",
+            "proceed": "Fewer concerns found; confirm payment protection",
         }[verdict]
     return Decision(verdict=verdict, headline=headline, reasons=reasons[:5])

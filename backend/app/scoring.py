@@ -1,7 +1,9 @@
 """Unvalidated product heuristics, not a statistical fraud model."""
 
-from .models import Finding, PageSignals, SourceResult
-from .payments import amount_at_stake, unprotected_only
+from datetime import date
+
+from .models import Decision, Finding, PageSignals, PaymentGuidance, SourceResult
+from .payments import amount_at_stake, named, unprotected_only
 
 WEIGHTS = {"reddit": 0.4, "instagram": 0.3, "store": 0.2, "reviews": 0.1}
 COMPLAINT_POINTS = 25
@@ -27,10 +29,14 @@ def score(sources: list[SourceResult], weights: dict[str, float] | None = None):
     return round(risk), round(coverage * 100)
 
 
-def narrative(risk: int | None, coverage: int) -> tuple[str, list[str]]:
+def narrative(
+    risk: int | None, coverage: int, recommended: str | None = None
+) -> tuple[str, list[str]]:
     steps = [
         "Check the return policy and a working contact method before paying.",
-        "Use a payment method with purchase protection; keep your order records.",
+        f"Pay with {named(recommended)} for the strongest buyer protection, and keep your order records."
+        if recommended
+        else "No listed payment method offers strong protection; avoid irreversible payments and keep your order records.",
     ]
     if coverage < 60:
         return (
@@ -75,3 +81,71 @@ def store_score(age_days: int | None, signals: PageSignals | None) -> float:
         points += 15 if amount and (amount.discountPercent or 0) >= 70 else 0
         points += 30 if unprotected_only(signals.paymentMethods) else 0
     return min(STORE_CAP, points)
+
+
+COMPLAINTS = {
+    "non-delivery": "Buyer reports of orders that never arrived",
+    "refund": "Buyer reports of refund problems",
+    "counterfeit": "Buyer reports of counterfeit items",
+}
+
+
+def registration_age(store: SourceResult | None) -> int | None:
+    fact = next(
+        (
+            f
+            for f in (store.findings if store else [])
+            if f.kind == "verified-fact" and f.concern == "domain-age" and f.date
+        ),
+        None,
+    )
+    return (store.checkedAt.date() - date.fromisoformat(fact.date)).days if fact else None
+
+
+def decide(
+    risk: int | None,
+    coverage: int,
+    sources: list[SourceResult],
+    payment: PaymentGuidance,
+    signals: PageSignals | None,
+) -> Decision:
+    available = [s for s in sources if s.status == "available"]
+    store = next((s for s in available if s.source == "store"), None)
+    age = registration_age(store)
+    new = age is not None and age < 30
+    limited, index = coverage < 60, risk or 0
+    if index >= 60 or (signals and unprotected_only(signals.paymentMethods)) or new:
+        verdict = "pause"
+    elif limited or index >= 30 or (store and store.score):
+        verdict = "protect"
+    else:
+        verdict = "proceed"
+
+    reasons = [
+        f.title
+        for f in (store.findings if store else [])
+        if f.concern in {"policy", "pricing", "payment"}
+        or (f.concern == "domain-age" and (verdict == "proceed" or (age or 0) < 365))
+    ]
+    reported = {f.concern for s in available if s.source != "store" for f in s.findings}
+    reasons += [text for concern, text in COMPLAINTS.items() if concern in reported]
+    if limited:
+        reasons.append(f"Limited evidence: {coverage}% source coverage")
+    elif risk is not None:
+        reasons.append(f"Risk index {risk}/100 with {coverage}% source coverage")
+
+    rec = payment.recommended
+    tier = next((o.protection for o in payment.options if o.method == rec), None)
+    pay = " or ".join([named(o.method) for o in payment.options if o.protection == tier][:2])
+    headline = {
+        "pause": f"Pause before paying; if you buy, use {pay}",
+        "protect": f"Pay only with {pay}",
+        "proceed": f"Fewer concerns found; pay with {pay} for protection",
+    }[verdict]
+    if not rec:
+        headline = {
+            "pause": "Pause: no protected way to pay is listed",
+            "protect": "Be careful: no protected way to pay is listed",
+            "proceed": "Fewer concerns found, but no protected way to pay is listed",
+        }[verdict]
+    return Decision(verdict=verdict, headline=headline, reasons=reasons[:5])

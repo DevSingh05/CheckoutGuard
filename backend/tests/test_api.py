@@ -136,3 +136,30 @@ def test_page_signals_isolate_store_cache(engine):
         assert engine.providers["store"].check.await_count == 2
 
     asyncio.run(run())
+
+
+def test_old_client_without_page_signals(engine):
+    result = call({"url": "https://shop.example/a", "productTitle": "Bag"}).json()
+    assert result["amountAtStake"] is None
+    assert result["payment"]["recommended"] == "credit-card"
+    assert result["decision"]["verdict"] == "pause"  # risk 64
+    assert len(result["decision"]["headline"]) <= 120
+
+
+def test_page_signals_shape_payment(engine):
+    signals = {
+        "paymentMethods": ["zelle", "paypal", "zelle"],
+        "price": 30,
+        "compareAtPrice": 100,
+        "currency": "EUR",
+    }
+    result = call({"url": "https://shop.example/a", "pageSignals": signals}).json()
+    assert [o["method"] for o in result["payment"]["options"]] == ["paypal", "zelle"]
+    assert result["amountAtStake"] == {
+        "price": 30.0,
+        "compareAtPrice": 100.0,
+        "currency": "EUR",
+        "discountPercent": 70,
+    }
+    bad = call({"url": "https://shop.example/a", "pageSignals": {"paymentMethods": ["cash"]}})
+    assert bad.status_code == 422

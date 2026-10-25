@@ -7,8 +7,9 @@ from urllib.parse import urlsplit
 from .cache import TTLCache
 from .demo import MERCHANTS, demo_sources
 from .models import AnalyzeRequest, AnalyzeResponse, Source, SourceResult
+from .payments import amount_at_stake, guidance
 from .providers.common import missing
-from .scoring import narrative, score
+from .scoring import decide, narrative, score
 
 
 class Provider(Protocol):
@@ -67,8 +68,10 @@ class Analyzer:
         for source in sources:
             if source.source == "reviews":
                 source.limitations = (source.limitations + request.extractionLimitations)[:20]
+        signals = None if request.demo else request.pageSignals
         risk, coverage = score(sources)
-        summary, steps = narrative(risk, coverage)
+        payment = guidance(signals.paymentMethods if signals else None)
+        summary, steps = narrative(risk, coverage, payment.recommended)
         return AnalyzeResponse(
             domain=domain,
             productTitle="Everyday travel pack" if request.demo else request.productTitle,
@@ -78,5 +81,8 @@ class Analyzer:
             summary=summary,
             nextSteps=steps,
             sources=sources,
+            decision=decide(risk, coverage, sources, payment, signals),
+            payment=payment,
+            amountAtStake=amount_at_stake(signals),
             demo=bool(request.demo),
         )

@@ -207,5 +207,8 @@ class AnalyzeResponse(BaseModel):
     summary: str
     nextSteps: list[str]
     sources: list[SourceResult]
+    decision: Decision
+    payment: PaymentGuidance
+    amountAtStake: AmountAtStake | None = None
     scannedAt: datetime = Field(default_factory=now)
     demo: bool = False

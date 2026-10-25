@@ -24,6 +24,7 @@ import {
 } from '../../lib/contracts';
 import type { collectPage } from '../../lib/extract';
 import { DecisionBanner, verdictCopy } from './components/DecisionBanner';
+import { PaymentCard } from './components/PaymentCard';
 import { BriefCard } from './components/BriefCard';
 
 const API = import.meta.env.WXT_API_URL || 'http://localhost:8000';
@@ -377,6 +378,12 @@ export function App() {
               </div>
             )}
             {result.decision && <DecisionBanner decision={result.decision} />}
+            {(result.payment || result.amountAtStake) && (
+              <PaymentCard
+                payment={result.payment}
+                amount={result.amountAtStake}
+              />
+            )}
             <section
               className={`risk-card ${result.limitedEvidence ? 'limited' : high ? 'concerning' : 'lower'}`}
             >

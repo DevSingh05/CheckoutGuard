@@ -709,6 +709,204 @@ footer span {
 .decision-reasons li {
   margin: 2px 0;
 }
+.pay-card {
+  background: #fff;
+  border: 1px solid #dee5dc;
+  border-radius: 13px;
+  padding: 15px;
+  margin-bottom: 16px;
+}
+.pay-heading {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #2d5a4b;
+}
+.pay-summary {
+  font-size: 11px;
+  color: #5f7067;
+  margin: 6px 0 0;
+}
+.pay-warning {
+  display: flex;
+  gap: 8px;
+  padding: 10px 11px;
+  margin-top: 11px;
+  background: #fcf0e9;
+  border: 1px solid #efd7c9;
+  border-radius: 9px;
+  color: #8a3f1f;
+}
+.pay-warning svg {
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.pay-warning p {
+  font-size: 11px;
+  line-height: 1.6;
+  margin: 0;
+}
+.pay-options {
+  list-style: none;
+  padding: 0;
+  margin: 12px 0 0;
+}
+.pay-option {
+  display: flex;
+  gap: 10px;
+  padding: 10px;
+  border: 1px solid #edf0e9;
+  border-radius: 10px;
+  margin: 7px 0;
+}
+.pay-option.recommended {
+  border: 2px solid #3b7a62;
+  background: #f3f8f2;
+}
+.pay-rank {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #e6ece3;
+  color: #52665a;
+  font-size: 10px;
+  display: grid;
+  place-items: center;
+}
+.pay-body {
+  min-width: 0;
+  flex: 1;
+}
+.pay-title {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  font-size: 12px;
+}
+.pay-recommended {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 10px;
+  background: #1e5144;
+  color: #fff;
+}
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 5px;
+  font-size: 9px;
+  font-weight: 650;
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid;
+}
+.badge-strong {
+  color: #2f6a46;
+  background: #ebf5ec;
+  border-color: #c3dfc8;
+}
+.badge-moderate {
+  color: #36608c;
+  background: #edf3fa;
+  border-color: #c8d8ec;
+}
+.badge-limited {
+  color: #7a5a12;
+  background: #fff6df;
+  border-color: #ecdcab;
+}
+.badge-none {
+  color: #94381c;
+  background: #fcede6;
+  border-color: #efc9b8;
+}
+.pay-body p {
+  font-size: 10px;
+  line-height: 1.6;
+  color: #6c7a72;
+  margin: 5px 0 0;
+  overflow-wrap: anywhere;
+}
+.stake {
+  border-top: 1px solid #edf0e9;
+  margin-top: 12px;
+  padding-top: 11px;
+}
+.stake-label {
+  font-size: 9px;
+  letter-spacing: 0.6px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #6b8074;
+}
+.stake-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  margin-top: 4px;
+}
+.stake-row strong {
+  font-size: 20px;
+  font-weight: 650;
+  letter-spacing: -0.5px;
+}
+.stake-was {
+  font-size: 11px;
+  color: #7c857e;
+}
+.stake-discount {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 10px;
+  font-weight: 650;
+  color: #5f4b8b;
+}
+.stake-hint {
+  display: flex;
+  gap: 6px;
+  font-size: 10px;
+  line-height: 1.6;
+  color: #8a3f1f;
+  margin: 7px 0 0;
+}
+.stake-hint svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.dispute {
+  border-top: 1px solid #edf0e9;
+  margin-top: 12px;
+}
+.dispute summary {
+  padding: 11px 0 2px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #2d5a4b;
+  gap: 7px;
+}
+.dispute summary > svg:first-child {
+  margin-left: 0;
+  transform: none !important;
+}
+.dispute ol {
+  margin: 8px 0 0;
+  padding-left: 18px;
+  font-size: 11px;
+  line-height: 1.65;
+  color: #5f7067;
+}
+.dispute li {
+  margin: 4px 0;
+}
 .brief {
   padding: 14px 15px;
   border: 1px solid #dee5dc;

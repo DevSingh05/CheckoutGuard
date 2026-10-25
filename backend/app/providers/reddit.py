@@ -45,6 +45,22 @@ class RedditProvider:
                 '"date":null}]}. Maximum 6. Use an empty array if no evidence. Never invent quotations.',
                 web_search="Auto",
             )
+        if getattr(response, "status", None) in {"FAILED", "ERROR", "CANCELLED"}:
+            description = (response.content or "").casefold()
+            billing = any(
+                word in description for word in ("credit", "billing", "subscription", "balance")
+            )
+            return missing(
+                "reddit",
+                "Backboard's current account balance cannot fund LLM research."
+                if billing
+                else "Backboard did not complete the research request.",
+                "unavailable",
+                code="billing" if billing else "provider-error",
+                action="Use the free store/review checks, or enable LLM credits in your Backboard account to activate Reddit research."
+                if billing
+                else "Check Backboard's account status and retry later.",
+            )
         data = Research.model_validate(structured_object(response.content))
         candidates = [item for item in data.findings if reddit_url(item.url)]
         verification_slots = asyncio.Semaphore(3)

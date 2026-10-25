@@ -340,3 +340,25 @@ def test_local_repeated_wording_stays_a_weak_signal():
     result = asyncio.run(ReviewProvider(mode="local").check(request, "shop.example"))
     assert result.status == "available" and 0 < result.score <= 20
     assert result.findings[0].concern == "repetition"
+
+
+def test_backboard_failed_billing_response_is_not_a_json_parse_error():
+    import sys
+    from types import SimpleNamespace
+
+    client = AsyncMock()
+    client.__aenter__.return_value = client
+    client.send_message.return_value = SimpleNamespace(
+        status="FAILED",
+        content="Free credit is reserved for Memory & RAG and cannot cover LLM chat.",
+    )
+    with patch.dict(
+        sys.modules, {"backboard": SimpleNamespace(BackboardClient=lambda **_: client)}
+    ):
+        result = asyncio.run(
+            RedditProvider("key").check(AnalyzeRequest(url="https://shop.example"), "shop.example")
+        )
+    assert result.status == "unavailable"
+    assert result.diagnostic.code == "billing"
+    assert result.score is None
+    assert result.findings == []

@@ -151,6 +151,7 @@ class Finding(BaseModel):
 
 class SourceDiagnostic(BaseModel):
     code: Literal[
+        "billing",
         "missing-key",
         "authentication",
         "rate-limit",
